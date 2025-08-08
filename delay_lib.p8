@@ -17,7 +17,7 @@ function _draw()
 end
 
 function _update()
-	-- delay_in_seconds(time_value, method_triggered)
+	delay_in_seconds(time_value, method_triggered)
 	delay_in_seconds(time_value, method_passed_with_arg, "test")
 end
 
