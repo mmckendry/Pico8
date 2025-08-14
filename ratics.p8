@@ -5,19 +5,20 @@ __lua__
 function _init()
     engine_mode = { {"lean", 3, selected=false}, {"normal", 2, selected=false}, {"rich", 1, selected=false}}
     pace_mode = {{"conserve", 3, selected=false}, {"normal", 2, selected=false}, {"push", 1, selected=false}}
+    tyre_compound = {soft=1.06, medium=1.0, hard=0.97}
     -- pick = flr(rnd(3)) + 1
     engine_select = 2
     pace_select = 2
     display = false
     count = 0
-    speed = 10
+    speed = 0
+    base_speed = 10
     fuel = 100
     tyre_wear = 100
     tyre_distance = 0
     engine_distance = 0
     tyre_delay = 0
     engine_delay = 0
-    compound = 1
     bg_colour = 1
 end 
 
@@ -30,9 +31,13 @@ y = 0
 should_pit = trigger_pitstop()
 change_engine_mode()
 change_pace_mode()
-speed = calculate_speed()
-tyre_wear = calculate_tyre_wear()
+speed = calculate_speed(base_speed, engine_mode[engine_select][2], pace_mode[pace_select][2], tyre_compound.medium, tyre_wear)
+if (tyre_wear != 0)then 
+    tyre_wear = calculate_tyre_wear(tyre_compound.medium)
+end
+if (fuel != 0)then 
 fuel = calculate_fuel_burn()
+end
 end
 
 function _draw()
@@ -47,14 +52,14 @@ print("engine lean selected: " ..tostring(engine_mode[1]['selected']), x, y+72, 
 print("engine normal selected: " ..tostring(engine_mode[2]['selected']), x, y+80, 2)
 print("engine rich selected: " ..tostring(engine_mode[3]['selected']), x, y+88, 2)
 
-print("engine lean selected: " ..tostring(pace_mode[1]['selected']), x, y+96, 3)
-print("engine normal selected: " ..tostring(pace_mode[2]['selected']), x, y+104, 3)
-print("engine rich selected: " ..tostring(pace_mode[3]['selected']), x, y+112, 3)
+print("pace conserve selected: " ..tostring(pace_mode[1]['selected']), x, y+96, 3)
+print("pace normal selected: " ..tostring(pace_mode[2]['selected']), x, y+104, 3)
+print("pace push selected: " ..tostring(pace_mode[3]['selected']), x, y+112, 3)
 
 end
 
 function trigger_pitstop()
-    if(tyre_wear <= 20) then 
+    if(tyre_wear <= 20 or fuel < 20) then 
      return true
     end
     return false
@@ -104,9 +109,12 @@ function change_pace_mode()
     pace_mode[pace_select]['selected'] = true 
 end
 
-function calculate_speed()
-    speed = engine_select + pace_select
-    return speed
+function calculate_speed(base_speed, engine, pace, compound, tyre_health)
+    return base_speed 
+            * (engine)
+            * (compound)
+            * (pace)
+            * (tyre_health >= 30 and (0.75 + 0.0025 * tyre_health) or (0.615 + 0.007 * tyre_health))
 end
 
 function calculate_fuel_burn()
@@ -115,7 +123,7 @@ function calculate_fuel_burn()
     return ceil(100 - fuel_burn)
 end
 
-function calculate_tyre_wear()
+function calculate_tyre_wear(compound)
     tyre_delay = interval(tyre_delay, pace_mode[pace_select][2], "tyre")
     local tyre_wear = compound * tyre_distance / 2 
     return ceil(100 - tyre_wear)
@@ -129,7 +137,7 @@ function count_simple_table(table)
 end
 
 function interval(delay_arg, modifier, distance)
-    local time = modifier * 10
+    local time = modifier * 5
     if(delay_arg<time)then 
         delay_arg+=1
     end
