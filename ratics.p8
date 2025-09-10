@@ -3,8 +3,8 @@ version 42
 __lua__
 
 function _init()
-    engine_mode = { {"lean", 3, selected=false}, {"normal", 2, selected=false}, {"rich", 1, selected=false}}
-    pace_mode = {{"conserve", 3, selected=false}, {"normal", 2, selected=false}, {"push", 1, selected=false}}
+    engine_mode = { {"lean", 3, selected=false, colour=2}, {"normal", 2, selected=false, colour=2}, {"rich", 1, selected=false, colour=2}}
+    pace_mode = {{"conserve", 3, selected=false, colour=3}, {"normal", 2, selected=false, colour=3}, {"push", 1, selected=false, colour=3}}
     tyre_compound = {soft=1.06, medium=1.0, hard=0.97}
     -- pick = flr(rnd(3)) + 1
     engine_select = 2
@@ -48,13 +48,14 @@ print("tyer wear: " ..tyre_wear.."%", x, y+24, 1)
 print("should pit: " ..tostring(should_pit), x, y+32, 1)
 print("engine mode: " ..engine_mode[engine_select][1], x, y+48, bg_colour)
 print("pace mode: " ..pace_mode[pace_select][1], x, y+64, 1)
-print("engine lean selected: " ..tostring(engine_mode[1]['selected']), x, y+72, 2)
-print("engine normal selected: " ..tostring(engine_mode[2]['selected']), x, y+80, 2)
-print("engine rich selected: " ..tostring(engine_mode[3]['selected']), x, y+88, 2)
 
-print("pace conserve selected: " ..tostring(pace_mode[1]['selected']), x, y+96, 3)
-print("pace normal selected: " ..tostring(pace_mode[2]['selected']), x, y+104, 3)
-print("pace push selected: " ..tostring(pace_mode[3]['selected']), x, y+112, 3)
+print("engine lean selected: " ..tostring(engine_mode[1]['selected']), x, y+72, engine_mode[1]['colour'])
+print("engine normal selected: " ..tostring(engine_mode[2]['selected']), x, y+80,  engine_mode[2]['colour'])
+print("engine rich selected: " ..tostring(engine_mode[3]['selected']), x, y+88,  engine_mode[3]['colour'])
+
+print("pace conserve selected: " ..tostring(pace_mode[1]['selected']), x, y+104, pace_mode[1]['colour'])
+print("pace normal selected: " ..tostring(pace_mode[2]['selected']), x, y+112, pace_mode[2]['colour'])
+print("pace push selected: " ..tostring(pace_mode[3]['selected']), x, y+120, pace_mode[3]['colour'])
 
 end
 
@@ -83,21 +84,23 @@ function change_engine_mode()
     end 
     for a=1, count do
         engine_mode[a]['selected'] = false
+        engine_mode[a]['colour'] = 2
     end
     engine_mode[engine_select]['selected'] = true
+    engine_mode[engine_select]['colour'] = 8
 end
 
 function change_pace_mode() 
     display = true
     local a = 0
     local count = count_simple_table(pace_mode)
-    if(btnp(⬆️))then
+    if(btnp(⬇️))then
         pace_select += 1
         if (pace_select > count) then 
             pace_select = 1
         end
     end 
-        if(btnp(⬇️))then
+        if(btnp(⬆️))then
         pace_select -= 1
         if (pace_select <= 0 ) then 
             pace_select = count
@@ -105,8 +108,10 @@ function change_pace_mode()
     end
         for a=1, count do
         pace_mode[a]['selected'] = false
+        pace_mode[a]['colour'] = 3
     end
     pace_mode[pace_select]['selected'] = true 
+    pace_mode[pace_select]['colour'] = 11 
 end
 
 function calculate_speed(base_speed, engine, pace, compound, tyre_health)
