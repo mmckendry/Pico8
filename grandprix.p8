@@ -210,6 +210,7 @@ function metrics()
   rectfill(x,y+40,x+52,y+0,9)
   display_leaderboard(x, y)
   display_laps(x, y)
+  display_taskbar(x, y)
   print('plr: '..player.speed,x+60,y+20,8);
   print('opp: '..opponent.speed,x+60,y+10,8);
 
@@ -245,6 +246,13 @@ function display_fuel()
 
  rectfill(x+122,y+30,x+127,y+30-player.fuel,11)
  rect(x+122,y+5,x+127,y+30,13)
+end
+
+function display_taskbar()
+  local x=c.x*8
+  local y=c.y*8
+  rectfill(x,y+108,x+128,y+128,8)
+  rectfill(x,y+106,x+126,y+126,9)
 end
 
 function out_of_fuel()
@@ -680,7 +688,7 @@ function init_global_values()
   first_move=true
   textdelay=0
   -- ratics
-  engine_mode = { {"lean", 3, selected=false, colour=2}, {"normal", 2, selected=false, colour=2}, {"rich", 1, selected=false, colour=2}}
+  engine_mode = {{"lean", 3, selected=false, colour=2}, {"normal", 2, selected=false, colour=2}, {"rich", 1, selected=false, colour=2}}
   pace_mode = {{"conserve", 3, selected=false, colour=3}, {"normal", 2, selected=false, colour=3}, {"push", 1, selected=false, colour=3}}
   tyre_compound = {soft=1.06, medium=1.0, hard=0.97}
   -- pick = flr(rnd(3)) + 1
