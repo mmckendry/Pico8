@@ -18,6 +18,7 @@ __lua__
   change_pace_mode()
 
   speed = calculate_speed(base_speed, engine_mode[engine_select][2], pace_mode[pace_select][2], tyre_compound.medium, tyre_wear)
+  player.speed = speed
   if (tyre_wear != 0)then 
     tyre_wear = calculate_tyre_wear(tyre_compound.medium)
   end
@@ -253,6 +254,8 @@ function display_taskbar()
   local y=c.y*8
   rectfill(x,y+108,x+128,y+128,8)
   rectfill(x,y+106,x+126,y+126,9)
+  print( "engine: "..tostring(engine_mode[engine_select][1]), x+2, y+107, engine_mode[engine_select]['colour'])
+  print( "pace: "..tostring(pace_mode[pace_select][1]), x+2, y+114, pace_mode[pace_select]['colour'])
 end
 
 function out_of_fuel()
@@ -343,13 +346,24 @@ function make_entities()
   opponent={{lx=0,ly=8},{cx=7,cy=5},{nx=0,ny=8},fuel=10,lap=0,name="mellilot", id=2, moves=0, speed=10, is_pitstop=false, in_pitlane=false, in_pitbox=false}
 end
 
+-- function calculate_player_speed(time_value, method, arg1, arg2)
+--   local seconds = time_value
+--   if (player_speed >= seconds) then
+--       player_speed = 0
+--       method(arg1, arg2)
+--     end
+--   player_speed += 1
+-- end
+
 function calculate_player_speed(time_value, method, arg1, arg2)
+ 
+  frame_counter += 1
+  local frames_needed = base_frames_needed / time_value
   local seconds = time_value
-    if (player_speed >= seconds) then
-      player_speed = 0
-      method(arg1, arg2)
-    end
-  player_speed += 1
+  if frame_counter >= frames_needed then 
+     method(arg1, arg2)
+    frame_counter = 0
+  end
 end
 
 function calculate_opponent_speed(time_value, method, arg1, arg2)
@@ -450,10 +464,10 @@ function change_engine_mode()
     end 
     for a=1, choice do
         engine_mode[a]['selected'] = false
-        engine_mode[a]['colour'] = 2
+        -- engine_mode[a]['colour'] = 7
     end
     engine_mode[engine_select]['selected'] = true
-    engine_mode[engine_select]['colour'] = 8
+    -- engine_mode[engine_select]['colour'] = 8
 end
 
 function change_pace_mode() 
@@ -474,10 +488,10 @@ function change_pace_mode()
     end
         for a=1, count do
         pace_mode[a]['selected'] = false
-        pace_mode[a]['colour'] = 3
+        -- pace_mode[a]['colour'] = 3
     end
     pace_mode[pace_select]['selected'] = true 
-    pace_mode[pace_select]['colour'] = 11 
+    -- pace_mode[pace_select]['colour'] = 11 
 end
 
 function count_simple_table(table)
@@ -495,7 +509,7 @@ function handle_pistop(car)
   pit_flag=fget(map_sprite)
 
   if(pit_flag == 16) then 
-    car.speed = 1
+    car.speed = 9
   end 
   
   if(pit_flag == 32 and car.is_pitstop == true) then
@@ -673,6 +687,10 @@ function init_leaderboard()
 end 
 
 function init_global_values()
+  -----
+  base_frames_needed = 30
+  frame_counter = 0
+  -----
   screenwidth=127
   screenheight=127
   scene=0
@@ -688,8 +706,8 @@ function init_global_values()
   first_move=true
   textdelay=0
   -- ratics
-  engine_mode = {{"lean", 3, selected=false, colour=2}, {"normal", 2, selected=false, colour=2}, {"rich", 1, selected=false, colour=2}}
-  pace_mode = {{"conserve", 3, selected=false, colour=3}, {"normal", 2, selected=false, colour=3}, {"push", 1, selected=false, colour=3}}
+    engine_mode = { {"lean", 1, selected=false, colour=8}, {"normal", 2, selected=false, colour=8}, {"rich", 3, selected=false, colour=8}}
+    pace_mode = {{"conserve", 1, selected=false, colour=8}, {"normal", 2, selected=false, colour=8}, {"push", 3, selected=false, colour=8}}
   tyre_compound = {soft=1.06, medium=1.0, hard=0.97}
   -- pick = flr(rnd(3)) + 1
   engine_select = 2
@@ -910,7 +928,7 @@ __gff__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000003838383838383838383838383838383838383838383838000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000003822030303050303030303030303030303030303363838000000000000000000000000000000000000000000000081000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
