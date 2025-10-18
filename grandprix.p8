@@ -625,10 +625,8 @@ function reset_values()
   timer=0
   player.is_pitstop = false
   player.in_pitbox = false
-  printh("reset values, current tyre_wear: " ..player.tyre_wear, "picolog.txt", false, true)
   player.tyre_wear = 100
   tyre_distance = 0
-  printh("reset values, new tyre_wear: " ..player.tyre_wear, "picolog.txt", false, true)
 end
 
 function pit_timer()

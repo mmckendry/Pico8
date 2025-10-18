@@ -6,6 +6,7 @@ function _init()
   screenwidth=127
   screenheight=127
   scene = 1
+  refuel_trigger = false
 end
 function _update()
 end
@@ -33,11 +34,54 @@ end
 function scene_draw()
     local title="now"
     local message="the pressure is on!"
-    display_scene(title, message,9,8)
+    display_scene(title, message,15,8)   
+    handle_upper_value()
+    handle_lower_value()
     if(btnp(🅾️)) then 
     scene = 1
   end 
 end
+
+function handle_upper_value() 
+    local colour = 8
+    if (refuel_trigger == true) then 
+        colour = 9
+    elseif(refuel_trigger == false) then 
+        colour = 8
+    end 
+    print("⬆️", 60, 60, colour)
+    if btnp(⬆️) then 
+        if (refuel_trigger == false) then 
+        elseif(refuel_trigger == true) then 
+        refuel_trigger = toggle()
+        end
+    end 
+end 
+
+function handle_lower_value()
+    local colour = 8
+    if (refuel_trigger == true) then 
+        colour = 8
+    elseif(refuel_trigger == false) then 
+        colour = 9
+    end 
+    print("⬇️", 60, 70, colour)
+    if btnp(⬇️) then 
+        if (refuel_trigger == true) then 
+        elseif(refuel_trigger == false) then 
+        refuel_trigger = toggle()
+        end
+    end 
+end
+
+function toggle()
+    if (refuel_trigger == true) then 
+        refuel_trigger = false
+    elseif (refuel_trigger == false) then 
+        refuel_trigger = true
+    end
+    return refuel_trigger
+end 
 
 function display_scene(title,message,fg_colour,bg_colour)
   rectfill(0,0,screenwidth,screenheight,fg_colour)
