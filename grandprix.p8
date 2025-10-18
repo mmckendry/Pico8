@@ -15,11 +15,11 @@ function _update()
   elseif (scene==1) then
     change_engine_mode()
     change_pace_mode()
-    speed = calculate_speed(base_speed, engine_mode[engine_select][2], pace_mode[pace_select][2], tyre_compound.medium, tyre_wear)
+    speed = calculate_speed(base_speed, engine_mode[engine_select][2], pace_mode[pace_select][2], tyre_compound.medium, player.tyre_wear)
     player.speed = speed
   
-    if (tyre_wear != 0)then 
-      tyre_wear = calculate_tyre_wear(tyre_compound.medium)
+    if (player.tyre_wear != 0)then 
+      player.tyre_wear = calculate_tyre_wear(tyre_compound.medium)
     end
   
     if (fuel != 0)then 
@@ -34,6 +34,8 @@ function _update()
     end
   elseif(scene==2) then
     finish_update()
+  elseif(scene==3) then 
+
   end
 end
  
@@ -55,6 +57,8 @@ function _draw()
     end
   elseif(scene==2) then 
    finish_draw()
+  elseif(scene==3) then 
+    refuel_draw()
   end
 end
 
@@ -68,6 +72,10 @@ end
 function draw_opponent()
   anim_player(o)
   spr(o.drive[o.d][o.f],opponent[2]["cx"]*8,opponent[2]["cy"]*8,2,2)
+end
+
+function refuel_draw()
+  print("refueling")
 end
 -->8
 --utility functions
@@ -254,7 +262,7 @@ function display_taskbar()
   rectfill(x,y+106,x+126,y+126,9)
   print( "engine: "..tostring(engine_mode[engine_select][1]), x+2, y+107, engine_mode[engine_select]['colour'])
   print( "pace: "..tostring(pace_mode[pace_select][1]), x+2, y+114, pace_mode[pace_select]['colour'])
-  print( "tyre wear: "..tyre_wear .."%", x+60, y+107, pace_mode[pace_select]['colour'])
+  print( "tyre wear: "..player.tyre_wear .."%", x+60, y+107, pace_mode[pace_select]['colour'])
   print( "fuel: "..fuel .."ltrs", x+60, y+114, pace_mode[pace_select]['colour'])
 end
 
@@ -336,7 +344,8 @@ function make_entities()
   p.drive={[0]={64,66},{68,70},{96,98},{100,102}}
   p.t,p.f,p.stp=0,1,4
   p.spd=5
-  player={{lx=0,ly=8},{cx=7,cy=5},{nx=0,ny=8},fuel=25,lap=0,name="ratson", id=1, moves=0, speed=10, is_pitstop=false, in_pitlane=false, in_pitbox=false}
+  player={{lx=0,ly=8},{cx=7,cy=5},{nx=0,ny=8},fuel=25,lap=0,name="ratson", id=1, moves=0, speed=10, is_pitstop=false, in_pitlane=false,
+   in_pitbox=false, tyre_wear=100}
 
   o={}
   o.d=0
@@ -396,9 +405,10 @@ function calculate_fuel_burn()
 end
 
 function calculate_tyre_wear(compound)
+  printh("Inside tyre_wear function tyre_wear: " ..player.tyre_wear, "picolog.txt", false, true)
   tyre_delay = interval(tyre_delay, pace_mode[pace_select]["interval"], "tyre")
-  local tyre_wear = compound * tyre_distance / 2 
-  return ceil(100 - tyre_wear)
+  player.tyre_wear = compound * tyre_distance / 2 
+  return ceil(100 - player.tyre_wear)
 end
 
 function interval(delay_arg, modifier, distance)
@@ -544,6 +554,7 @@ function pitstop_update()
     if (s_finished) then
       sequence_generated=false
       reset_values()
+      scene=3
     end
   end
   if(sequence_generated) then 
@@ -614,7 +625,10 @@ function reset_values()
   timer=0
   player.is_pitstop = false
   player.in_pitbox = false
-  -- tyre_wear = 100
+  printh("reset values, current tyre_wear: " ..player.tyre_wear, "picolog.txt", false, true)
+  player.tyre_wear = 100
+  tyre_distance = 0
+  printh("reset values, new tyre_wear: " ..player.tyre_wear, "picolog.txt", false, true)
 end
 
 function pit_timer()
@@ -682,7 +696,6 @@ function init_global_values()
   speed = 0
   base_speed = 0.8
   fuel = 100
-  tyre_wear = 100
   tyre_distance = 0
   engine_distance = 0
   tyre_delay = 0
