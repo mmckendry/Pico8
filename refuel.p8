@@ -8,8 +8,10 @@ function _init()
   scene = 1
   refuel_trigger = false
 end
+
 function _update()
 end
+
 function _draw()
     cls()
     if(scene == 1) then 
@@ -18,8 +20,6 @@ function _draw()
     if(scene == 2) then 
         scene_draw()
     end
-end
-function _update60()
 end
 
 function title_draw()
@@ -35,52 +35,34 @@ function scene_draw()
     local title="now"
     local message="the pressure is on!"
     display_scene(title, message,15,8)   
-    handle_upper_value()
-    handle_lower_value()
+    handle_fuel_trigger()
     if(btnp(🅾️)) then 
     scene = 1
   end 
 end
 
-function handle_upper_value() 
-    local colour = 8
-    if (refuel_trigger == true) then 
-        colour = 9
-    elseif(refuel_trigger == false) then 
-        colour = 8
-    end 
-    print("⬆️", 60, 60, colour)
-    if btnp(⬆️) then 
-        if (refuel_trigger == false) then 
-        elseif(refuel_trigger == true) then 
-        refuel_trigger = toggle()
+function handle_fuel_trigger()
+    local up_button_colour = 8
+    local down_button_colour = 8
+    
+    if refuel_trigger then 
+        up_buttton_colour = 9
+        if btnp(⬆️) then
+            refuel_trigger = toggle()
+        end
+    elseif not refuel_trigger then 
+        down_button_colour = 9
+        if btnp(⬇️) then 
+            refuel_trigger = toggle()
         end
     end 
-end 
 
-function handle_lower_value()
-    local colour = 8
-    if (refuel_trigger == true) then 
-        colour = 8
-    elseif(refuel_trigger == false) then 
-        colour = 9
-    end 
-    print("⬇️", 60, 70, colour)
-    if btnp(⬇️) then 
-        if (refuel_trigger == true) then 
-        elseif(refuel_trigger == false) then 
-        refuel_trigger = toggle()
-        end
-    end 
+    print("⬆️", 60, 60, up_button_colour)
+    print("⬇️", 60, 70, down_button_colour)
 end
 
 function toggle()
-    if (refuel_trigger == true) then 
-        refuel_trigger = false
-    elseif (refuel_trigger == false) then 
-        refuel_trigger = true
-    end
-    return refuel_trigger
+    return not refuel_trigger
 end 
 
 function display_scene(title,message,fg_colour,bg_colour)
@@ -96,6 +78,7 @@ end
 function vcenter(s)
   return (screenheight/4)
 end
+
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
