@@ -35,7 +35,7 @@ function _update()
   elseif(scene==2) then
     finish_update()
   elseif(scene==3) then 
-
+    
   end
 end
  
@@ -48,7 +48,6 @@ function _draw()
     drawtrack()
     draw_opponent()
     draw_player()
-    display_fuel()
     metrics()
     out_of_fuel()
     display_textwindow()
@@ -75,7 +74,65 @@ function draw_opponent()
 end
 
 function refuel_draw()
-  print("refueling")
+  local title="refuel"
+  local message="pump the fuel!"
+  display_scene(title,message,7,8)
+  handle_fuel_trigger()
+  print("fuel: " ..fuel.." ltrs", 10, 10, 8)
+  print("percentage: " ..percent, 10, 20, 8)
+      if(fuel_full) then 
+      print("x to refuel!", 10, 120, 8)
+      if btnp(❎) then 
+        reset_values()
+        scene = 1
+    end
+    end
+
+end
+
+function handle_fuel_trigger()
+    local up_buttton_colour = 8
+    local down_button_colour = 8
+               
+    if refuel_trigger then 
+        up_buttton_colour = 9
+        if btnp(⬆️) then
+            topup_fuel() 
+            refuel_trigger = toggle()
+        end
+    elseif not refuel_trigger then 
+        down_button_colour = 9
+        if btnp(⬇️) then 
+            topup_fuel() 
+            refuel_trigger = toggle()
+        end
+    end 
+    
+    print("⬆️", 60, 60, up_buttton_colour)
+    print("⬇️", 60, 70, down_button_colour)
+
+end
+
+function toggle()
+    return not refuel_trigger
+end 
+
+function topup_fuel() 
+  percent = get_percentage_of_total(2, fuel)
+  if (fuel < 100) then 
+    engine_distance = engine_distance - percent
+    fuel = fuel + percent
+  end
+  if (fuel >= 100) then 
+    fuel = 100
+    fuel_full = true 
+  end
+end
+
+function get_percentage_of_total(percentage, total)
+  local p
+  p = percentage/100
+  return p * total
 end
 -->8
 --utility functions
@@ -121,10 +178,6 @@ function can_move(x,y, car)
     return computed_value!=3
   end
 
-end
-
---update fuel
-function update_fuel() -- needs a better implementation, implement via travel instead of time
 end
 
 function call_method_with_arg(method, arg)
@@ -214,14 +267,10 @@ end
 function metrics()
   local x=c.x*8
   local y=c.y*8
-  rectfill(x+2,y+42,x+54,y+2,8)
-  rectfill(x,y+40,x+52,y+0,9)
+  rectfill(x+1,y+41,x+39,y+1,8)
+  rectfill(x,y+40,x+38,y+0,9)
   display_leaderboard(x, y)
-  display_laps(x, y)
   display_taskbar(x, y)
-  print('plr: '..player.speed,x+60,y+20,8);
-  print('opp: '..opponent.speed,x+60,y+10,8);
-  print('speed: '..speed,x+60,y+30,8);
 end
 
 function display_leaderboard(x, y)
@@ -237,22 +286,14 @@ function display_pit_message()
   print(pitmessage,p.x-10,p.y-10,14)
 end 
 
-function display_laps() 
-  local x=c.x*8
-  local y=c.y*8
-
-  print('lap', x+40, y+4, 8)
-  print('---', x+40, y+8, 8)
-  print(player[2]["cx"], x+40, y+16, 8)
-  print(player[2]["cy"], x+40, y+20, 8)
-end 
-
 function display_fuel()
   local x=c.x*8
   local y=c.y*8
-
-  rectfill(x+122,y+30,x+127,y+30-player.fuel,11)
-  rect(x+122,y+5,x+127,y+30,13)
+  rectfill(x+106, y+102-fuel/4, x+126, y+102, 11)
+  circfill(x+116, y+116, 10, 0)
+  circfill(x+116, y+116, 8, 10)
+  circfill(x+116, y+116, 7, 0)
+  circfill(x+116, y+116, 2, 7)
 end
 
 function display_taskbar()
@@ -264,6 +305,7 @@ function display_taskbar()
   print( "pace: "..tostring(pace_mode[pace_select][1]), x+2, y+114, pace_mode[pace_select]['colour'])
   print( "tyre wear: "..player.tyre_wear .."%", x+60, y+107, pace_mode[pace_select]['colour'])
   print( "fuel: "..fuel .."ltrs", x+60, y+114, pace_mode[pace_select]['colour'])
+  -- display_fuel()
 end
 
 function out_of_fuel()
@@ -380,9 +422,6 @@ function move_player()
   if (player["fuel"]!=0) then 
     call_method_with_arg(handle_pistop, player)
   if (player.in_pitbox == false)then
-    if (player.in_pitlane) then 
-      player.speed = 3
-    end
     calculate_player_speed(player.speed, pathfinding, player, p)
   end
     calculate_opponent_speed(opponent.speed, pathfinding, opponent, o)
@@ -405,7 +444,6 @@ function calculate_fuel_burn()
 end
 
 function calculate_tyre_wear(compound)
-  printh("Inside tyre_wear function tyre_wear: " ..player.tyre_wear, "picolog.txt", false, true)
   tyre_delay = interval(tyre_delay, pace_mode[pace_select]["interval"], "tyre")
   player.tyre_wear = compound * tyre_distance / 2 
   return ceil(100 - player.tyre_wear)
@@ -470,10 +508,8 @@ function change_pace_mode()
   end
   for a=1, count do
     pace_mode[a]['selected'] = false
-  -- pace_mode[a]['colour'] = 3
   end
   pace_mode[pace_select]['selected'] = true 
-  -- pace_mode[pace_select]['colour'] = 11 
 end
 
 function count_simple_table(table)
@@ -489,13 +525,15 @@ function handle_pistop(car)
   pit_flag=fget(map_sprite)
 
   if(pit_flag == 16) then 
-    car.speed = 9
+
   end 
   
   if(pit_flag == 32 and car.is_pitstop == true) then
-     fset(23, 0, false)
-     fset(15, 0, true)
-     car.in_pitlane = true
+    fset(23, 0, false)
+    fset(15, 0, true)
+    car.in_pitlane = true
+    engine_select = 2
+    pace_select = 2
   end
 
   if(pit_flag == 128 and car.in_pitlane == true) then
@@ -543,7 +581,7 @@ end
 function pitstop_draw()
   camera_shake()
   local title="pitstop!"
-  local message="x to release!"
+  local message="x to refuel!"
   display_scene(title,message,7,8)
   generate_sequence()
 end
@@ -553,7 +591,6 @@ function pitstop_update()
   if (btnp(❎)) then
     if (s_finished) then
       sequence_generated=false
-      reset_values()
       scene=3
     end
   end
@@ -625,8 +662,13 @@ function reset_values()
   timer=0
   player.is_pitstop = false
   player.in_pitbox = false
+  fuel_full = false
+  fuel = 100
+  engine_distance = 0
   player.tyre_wear = 100
   tyre_distance = 0
+  engine_select = 2
+  pace_select = 2
 end
 
 function pit_timer()
@@ -646,7 +688,6 @@ end
 
 function finish_update()
   if (btnp(❎)) then 
-  -- create method to flush game state
     player.lap=0
     opponent.lap=0
     player.fuel=25
@@ -667,6 +708,10 @@ function init_global_values()
   -----
   base_frames_needed = 30
   frame_counter = 0
+
+  refuel_trigger = false
+  percent = 0
+  fuel_full = false
   -----
   screenwidth=127
   screenheight=127
@@ -686,7 +731,6 @@ function init_global_values()
   engine_mode = {{"lean", 1, selected=false, colour=8, interval=3}, {"normal", 2, selected=false, colour=8, interval=2}, {"rich", 3, selected=false, colour=8, interval=1}}
   pace_mode = {{"conserve", 1, selected=false, colour=8, interval=3}, {"normal", 2, selected=false, colour=8, interval=2}, {"push", 3, selected=false, colour=8, interval=1}}
   tyre_compound = {soft=1.06, medium=1.0, hard=0.97}
-  -- pick = flr(rnd(3)) + 1
   engine_select = 2
   pace_select = 2
   choice = 0
