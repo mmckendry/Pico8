@@ -1,7 +1,6 @@
 pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
-
 function _init()
   init_global_values()
   make_entities()
@@ -10,40 +9,38 @@ end
 
 function _update()
   clearmessage()
-  if(scene==0) then
+  if (scene == 0) then
     title_update()
-  elseif (scene==1) then
+  elseif (scene == 1) then
     change_engine_mode()
     change_pace_mode()
     speed = calculate_speed(base_speed, engine_mode[engine_select][2], pace_mode[pace_select][2], tyre_compound.medium, player.tyre_wear)
     player.speed = speed
-  
-    if (player.tyre_wear != 0)then 
+
+    if (player.tyre_wear != 0) then
       player.tyre_wear = calculate_tyre_wear(tyre_compound.medium)
     end
-  
-    if (fuel != 0)then 
+
+    if (fuel != 0) then
       fuel = calculate_fuel_burn()
     end
-    
+
     move_player(player)
-    
-    if(player.in_pitbox) then 
+
+    if player.in_pitbox then
       pitstop_update()
-    
     end
-  elseif(scene==2) then
+  elseif (scene == 2) then
     finish_update()
-  elseif(scene==3) then 
-    
+  elseif (scene == 3) then
   end
 end
- 
+
 function _draw()
   cls()
-  if(scene==0) then
-   title_draw()
-  elseif(scene==1) then
+  if (scene == 0) then
+    title_draw()
+  elseif (scene == 1) then
     camera_follow()
     drawtrack()
     draw_opponent()
@@ -51,133 +48,130 @@ function _draw()
     metrics()
     out_of_fuel()
     display_textwindow()
-    if(player.in_pitbox) then
+    if player.in_pitbox then
       pitstop_draw()
     end
-  elseif(scene==2) then 
-   finish_draw()
-  elseif(scene==3) then 
+  elseif (scene == 2) then
+    finish_draw()
+  elseif (scene == 3) then
     refuel_draw()
   end
 end
 
 function draw_player()
-  palt(4,true)
-  palt(0,false)
+  palt(4, true)
+  palt(0, false)
   anim_player(p)
-  spr(p.drive[p.d][p.f],player[2]["cx"]*8,player[2]["cy"]*8,2,2)
+  spr(p.drive[p.d][p.f], player[2]["cx"] * 8, player[2]["cy"] * 8, 2, 2)
 end
 
 function draw_opponent()
   anim_player(o)
-  spr(o.drive[o.d][o.f],opponent[2]["cx"]*8,opponent[2]["cy"]*8,2,2)
+  spr(o.drive[o.d][o.f], opponent[2]["cx"] * 8, opponent[2]["cy"] * 8, 2, 2)
 end
 
 function refuel_draw()
-  local title="refuel"
-  local message="pump the fuel!"
-  display_scene(title,message,7,8)
+  local title = "refuel"
+  local message = "pump the fuel!"
+  display_scene(title, message, 7, 8)
   handle_fuel_trigger()
-  print("fuel: " ..fuel.." ltrs", 10, 10, 8)
-  print("percentage: " ..percent, 10, 20, 8)
-      if(fuel_full) then 
-      print("x to refuel!", 10, 120, 8)
-      if btnp(❎) then 
-        reset_values()
-        scene = 1
+  print("fuel: " .. fuel .. " ltrs", 10, 10, 8)
+  print("percentage: " .. percent, 10, 20, 8)
+  if fuel_full then
+    print("x to release!", 10, 120, 8)
+    if btnp(❎) then
+      reset_values()
+      scene = 1
     end
-    end
-
+  end
 end
 
 function handle_fuel_trigger()
-    local up_buttton_colour = 8
-    local down_button_colour = 8
-               
-    if refuel_trigger then 
-        up_buttton_colour = 9
-        if btnp(⬆️) then
-            topup_fuel() 
-            refuel_trigger = toggle()
-        end
-    elseif not refuel_trigger then 
-        down_button_colour = 9
-        if btnp(⬇️) then 
-            topup_fuel() 
-            refuel_trigger = toggle()
-        end
-    end 
-    
-    print("⬆️", 60, 60, up_buttton_colour)
-    print("⬇️", 60, 70, down_button_colour)
+  local up_buttton_colour = 8
+  local down_button_colour = 8
 
+  if refuel_trigger then
+    up_buttton_colour = 9
+    if btnp(⬆️) then
+      topup_fuel()
+      refuel_trigger = toggle()
+    end
+  elseif not refuel_trigger then
+    down_button_colour = 9
+    if btnp(⬇️) then
+      topup_fuel()
+      refuel_trigger = toggle()
+    end
+  end
+
+  print("⬆️", 60, 60, up_buttton_colour)
+  print("⬇️", 60, 70, down_button_colour)
 end
 
 function toggle()
-    return not refuel_trigger
-end 
+  return not refuel_trigger
+end
 
-function topup_fuel() 
+function topup_fuel()
   percent = get_percentage_of_total(2, fuel)
-  if (fuel < 100) then 
+  if (fuel < 100) then
     engine_distance = engine_distance - percent
     fuel = fuel + percent
   end
-  if (fuel >= 100) then 
+  if (fuel >= 100) then
     fuel = 100
-    fuel_full = true 
+    fuel_full = true
   end
 end
 
 function get_percentage_of_total(percentage, total)
   local p
-  p = percentage/100
+  p = percentage / 100
   return p * total
 end
 -->8
 --utility functions
-c={}
-c.x=0
-c.y=0
+c = {}
+c.x = 0
+c.y = 0
 --camera follows the player
 function camera_follow()
-  c.x=player[2]["cx"]-10
-  c.y=player[2]["cy"]-10
+  c.x = player[2]["cx"] - 10
+  c.y = player[2]["cy"] - 10
 
-  c.x=mid(0,c.x,128)
-  c.y=mid(0,c.y,128)
+  c.x = mid(0, c.x, 128)
+  c.y = mid(0, c.y, 128)
 
-  camera(c.x*8,c.y*8)
+  camera(c.x * 8, c.y * 8)
 end
 
 function camera_shake()
-  local shakex=16-rnd(32)
-  local shakey=16-rnd(32)
-  shakex*=shake
-  shakey*=shake
- 
-  camera(shakex,shakey)
-  shake = shake*0.95
+  local shakex = 16 - rnd(32)
+  local shakey = 16 - rnd(32)
+  shakex *= shake
+  shakey *= shake
 
-  if (shake<0.05) then 
-    shake=0
+  camera(shakex, shakey)
+  shake = shake * 0.95
+
+  if (shake < 0.05) then
+    shake = 0
   end
 end
 
 --collision detection
-function can_move(x,y, car)
-  local map_sprite=mget(x,y)
-  flag=fget(map_sprite)
-  local computed_value = car.id+flag
+function can_move(x, y, car)
+  local map_sprite = mget(x, y)
+  flag = fget(map_sprite)
+  local computed_value = car.id + flag
 
-  printh("Car:  " ..car["name"].." Flag: "..flag.." Computed Value: "..computed_value, "flag.txt", false, true)
-  if (car["name"]=="ratson") then 
-    return computed_value!=2
+  printh("Car:  " .. car["name"] .. " Flag: " .. flag .. " Computed Value: " .. computed_value, "flag.txt", false, true)
+  if (car["name"] == "ratson") then
+    return computed_value != 2
   end
-  if(car["name"]=="mellilot") then
-    return computed_value!=3
+  if (car["name"] == "mellilot") then
+    return computed_value != 3
   end
-
 end
 
 function call_method_with_arg(method, arg)
@@ -185,179 +179,179 @@ function call_method_with_arg(method, arg)
 end
 
 --pathfinding for the player
-function pathfinding(car,direction)
-  local up={}
-  local down={}
-  local left={}
-  local right={}
-  local neighbours={}
-  local candidates={}
-  local next_step={}
+function pathfinding(car, direction)
+  local up = {}
+  local down = {}
+  local left = {}
+  local right = {}
+  local neighbours = {}
+  local candidates = {}
+  local next_step = {}
 
-  car[3]["nx"]=car[2]["cx"] 
-  car[3]["ny"]=car[2]["cy"]
-  if(first_move)then 
-    car[1]["lx"]-=1 
-    car[1]["ly"]=car[2]["cy"]
-    first_move=false
-  -- end
+  car[3]["nx"] = car[2]["cx"]
+  car[3]["ny"] = car[2]["cy"]
+  if first_move then
+    car[1]["lx"] -= 1
+    car[1]["ly"] = car[2]["cy"]
+    first_move = false
+    -- end
   end
 
   function set_neighbours()
-    left[1]=car[3]["nx"] - 1
-    left[2]=car[3]["ny"]
-    right[1]=car[3]["nx"] + 1
-    right[2]=car[3]["ny"]
-    up[1]=car[3]["nx"]
-    up[2]=car[3]["ny"] + 1
-    down[1]=car[3]["nx"]
-    down[2]=car[3]["ny"] - 1
-    neighbours={left,right,up,down}
+    left[1] = car[3]["nx"] - 1
+    left[2] = car[3]["ny"]
+    right[1] = car[3]["nx"] + 1
+    right[2] = car[3]["ny"]
+    up[1] = car[3]["nx"]
+    up[2] = car[3]["ny"] + 1
+    down[1] = car[3]["nx"]
+    down[2] = car[3]["ny"] - 1
+    neighbours = { left, right, up, down }
   end
- 
+
   set_neighbours()
   for k, v in ipairs(neighbours) do
-   for j, m in ipairs(v) do
-     candidates[j]=m
-   end
-   if (candidates[1]!=car[1]["lx"] or candidates[2]!=car[1]["ly"]) then
-    -- sfx(0) 
-     if(can_move(candidates[1],candidates[2],car)) then
-      next_step[1]=candidates[1]
-      next_step[2]=candidates[2]
-      car["moves"]=car["moves"]+1
+    for j, m in ipairs(v) do
+      candidates[j] = m
+    end
+    if (candidates[1] != car[1]["lx"] or candidates[2] != car[1]["ly"]) then
+      -- sfx(0)
+      if can_move(candidates[1], candidates[2], car) then
+        next_step[1] = candidates[1]
+        next_step[2] = candidates[2]
+        car["moves"] = car["moves"] + 1
       end
     end
   end
-  
-  car[1]["lx"]=car[2]["cx"]
-  car[1]["ly"]=car[2]["cy"]
 
-  car[2]["cx"]=next_step[1]
-  car[2]["cy"]=next_step[2]
-  
-  local lx,ly=car[1]["lx"],car[1]["ly"]
-  local cx,cy=car[2]["cx"],car[2]["cy"]
+  car[1]["lx"] = car[2]["cx"]
+  car[1]["ly"] = car[2]["cy"]
 
-  set_direction(lx,ly,cx,cy,direction)
+  car[2]["cx"] = next_step[1]
+  car[2]["cy"] = next_step[2]
+
+  local lx, ly = car[1]["lx"], car[1]["ly"]
+  local cx, cy = car[2]["cx"], car[2]["cy"]
+
+  set_direction(lx, ly, cx, cy, direction)
   sortleaderboard(leaderboard)
 end
 
 function anim_player(car)
-  car.t=(car.t+1)%car.spd
-  if (car.t==0) car.f=car.f%#car.drive[car.d]+1
+  car.t = (car.t + 1) % car.spd
+  if (car.t == 0) car.f = car.f % #car.drive[car.d] + 1
 end
- 
-function set_direction(lx,ly,cx,cy,direction)
-  if(lx > cx) then 
-    direction.d=0
+
+function set_direction(lx, ly, cx, cy, direction)
+  if (lx > cx) then
+    direction.d = 0
   end
-  if(lx < cx) then 
-    direction.d=1 
-  end 
-  if(ly > cy) then 
-    direction.d=2
+  if (lx < cx) then
+    direction.d = 1
   end
-  if(ly < cy) then 
-    direction.d=3
+  if (ly > cy) then
+    direction.d = 2
+  end
+  if (ly < cy) then
+    direction.d = 3
   end
 end
 -->8
---display 
+--display
 function metrics()
-  local x=c.x*8
-  local y=c.y*8
-  rectfill(x+1,y+41,x+39,y+1,8)
-  rectfill(x,y+40,x+38,y+0,9)
+  local x = c.x * 8
+  local y = c.y * 8
+  rectfill(x + 1, y + 41, x + 39, y + 1, 8)
+  rectfill(x, y + 40, x + 38, y + 0, 9)
   display_leaderboard(x, y)
   display_taskbar(x, y)
 end
 
 function display_leaderboard(x, y)
-  print('position', x+1, y+4, 8)
-  print('--------', x+1, y+8, 8)
-  for k, v in ipairs (leaderboard) do
+  print('position', x + 1, y + 4, 8)
+  print('--------', x + 1, y + 8, 8)
+  for k, v in ipairs(leaderboard) do
     print(v['name'])
     print(v['moves'])
   end
 end
 
 function display_pit_message()
-  print(pitmessage,p.x-10,p.y-10,14)
-end 
+  print(pitmessage, p.x - 10, p.y - 10, 14)
+end
 
 function display_fuel()
-  local x=c.x*8
-  local y=c.y*8
-  rectfill(x+106, y+102-fuel/4, x+126, y+102, 11)
-  circfill(x+116, y+116, 10, 0)
-  circfill(x+116, y+116, 8, 10)
-  circfill(x+116, y+116, 7, 0)
-  circfill(x+116, y+116, 2, 7)
+  local x = c.x * 8
+  local y = c.y * 8
+  rectfill(x + 106, y + 102 - fuel / 4, x + 126, y + 102, 11)
+  circfill(x + 116, y + 116, 10, 0)
+  circfill(x + 116, y + 116, 8, 10)
+  circfill(x + 116, y + 116, 7, 0)
+  circfill(x + 116, y + 116, 2, 7)
 end
 
 function display_taskbar()
-  local x=c.x*8
-  local y=c.y*8
-  rectfill(x,y+108,x+128,y+128,8)
-  rectfill(x,y+106,x+126,y+126,9)
-  print( "engine: "..tostring(engine_mode[engine_select][1]), x+2, y+107, engine_mode[engine_select]['colour'])
-  print( "pace: "..tostring(pace_mode[pace_select][1]), x+2, y+114, pace_mode[pace_select]['colour'])
-  print( "tyre wear: "..player.tyre_wear .."%", x+60, y+107, pace_mode[pace_select]['colour'])
-  print( "fuel: "..fuel .."ltrs", x+60, y+114, pace_mode[pace_select]['colour'])
+  local x = c.x * 8
+  local y = c.y * 8
+  rectfill(x, y + 108, x + 128, y + 128, 8)
+  rectfill(x, y + 106, x + 126, y + 126, 9)
+  print("engine: " .. tostring(engine_mode[engine_select][1]), x + 2, y + 107, engine_mode[engine_select]['colour'])
+  print("pace: " .. tostring(pace_mode[pace_select][1]), x + 2, y + 114, pace_mode[pace_select]['colour'])
+  print("tyre wear: " .. player.tyre_wear .. "%", x + 60, y + 107, pace_mode[pace_select]['colour'])
+  print("fuel: " .. fuel .. "ltrs", x + 60, y + 114, pace_mode[pace_select]['colour'])
   -- display_fuel()
 end
 
 function out_of_fuel()
-  local text="you are out of fuel!"
-  if (player.fuel==0) then
-    display=true
-    set_textwindow(text,8,9,8)
+  local text = "you are out of fuel!"
+  if (player.fuel == 0) then
+    display = true
+    set_textwindow(text, 8, 9, 8)
   end
 end
 
-function set_textwindow(text,bg,fg,t_colour,x,y)
-  textlabel=text
-  text_colour=t_colour
-  fg_colour=fg
-  bg_colour=bg
+function set_textwindow(text, bg, fg, t_colour, x, y)
+  textlabel = text
+  text_colour = t_colour
+  fg_colour = fg
+  bg_colour = bg
 end
 
 function display_textwindow()
-  local x=c.x*8
-  local y=c.y*8
-  if (display) then  
-    rectfill(x+12,y+42,x+122,y+82,bg_colour)
-    rectfill(x+10,y+40,x+120,y+80,fg_colour)
-    print(textlabel,hcenter(textlabel)+x,y+60,text_colour)
+  local x = c.x * 8
+  local y = c.y * 8
+  if display then
+    rectfill(x + 12, y + 42, x + 122, y + 82, bg_colour)
+    rectfill(x + 10, y + 40, x + 120, y + 80, fg_colour)
+    print(textlabel, hcenter(textlabel) + x, y + 60, text_colour)
   end
 end
 
-function display_scene(title,message,fg_colour,bg_colour)
-  rectfill(0,0,screenwidth,screenheight,fg_colour)
-  print(title,hcenter(title),vcenter(screenheight),bg_colour)
-  print(message,hcenter(message),(vcenter(screenheight))+(screenheight/2),bg_colour)
+function display_scene(title, message, fg_colour, bg_colour)
+  rectfill(0, 0, screenwidth, screenheight, fg_colour)
+  print(title, hcenter(title), vcenter(screenheight), bg_colour)
+  print(message, hcenter(message), vcenter(screenheight) + (screenheight / 2), bg_colour)
 end
 
 function hcenter(s)
-  return (screenwidth/2)-flr((#s*4)/2)
+  return (screenwidth / 2) - flr((#s * 4) / 2)
 end
 
 function vcenter(s)
-  return (screenheight/4)
+  return (screenheight / 4)
 end
 
 function drawtrack()
-  map(0,0,0,0,128,128)
+  map(0, 0, 0, 0, 128, 128)
 end
 
 function clearmessage()
-  if(textdelay<60)then 
-    textdelay+=1
+  if (textdelay < 60) then
+    textdelay += 1
   end
-  if(textdelay>=60)then
-    textdelay=0
-    display=false
+  if (textdelay >= 60) then
+    textdelay = 0
+    display = false
   end
 end
 
@@ -367,41 +361,42 @@ function sortleaderboard(leaderboard)
   local haschanged
   repeat
     haschanged = false
-    itemcount=itemcount - 1
-  for i = 1, itemcount do
-    if(leaderboard[i]['moves'] < leaderboard[i+1]['moves']) then
-      leaderboard[i], leaderboard[i+1] = leaderboard[i+1], leaderboard[i]
-      haschanged = true
+    itemcount = itemcount - 1
+    for i = 1, itemcount do
+      if (leaderboard[i]['moves'] < leaderboard[i + 1]['moves']) then
+        leaderboard[i], leaderboard[i + 1] = leaderboard[i + 1], leaderboard[i]
+        haschanged = true
+      end
     end
-   end
   until haschanged == false
 end
-
 
 -->8
 --player functions
 function make_entities()
-  p={}
-  p.d=0
-  p.drive={[0]={64,66},{68,70},{96,98},{100,102}}
-  p.t,p.f,p.stp=0,1,4
-  p.spd=5
-  player={{lx=0,ly=8},{cx=7,cy=5},{nx=0,ny=8},fuel=25,lap=0,name="ratson", id=1, moves=0, speed=10, is_pitstop=false, in_pitlane=false,
-   in_pitbox=false, tyre_wear=100}
+  p = {}
+  p.d = 0
+  p.drive = { [0] = { 64, 66 }, { 68, 70 }, { 96, 98 }, { 100, 102 } }
+  p.t, p.f, p.stp = 0, 1, 4
+  p.spd = 5
+  player = {
+    { lx = 0, ly = 8 }, { cx = 7, cy = 5 }, { nx = 0, ny = 8 }, fuel = 25, lap = 0, name = "ratson", id = 1, moves = 0, speed = 10, is_pitstop = false, in_pitlane = false,
+    in_pitbox = false, tyre_wear = 100
+  }
 
-  o={}
-  o.d=0
-  o.drive={[0]={72,74},{76,78},{104,106},{108,110}}
-  o.t,o.f,o.stp=0,1,4
-  o.spd=5
-  opponent={{lx=0,ly=8},{cx=7,cy=5},{nx=0,ny=8},fuel=10,lap=0,name="mellilot", id=2, moves=0, speed=10, is_pitstop=false, in_pitlane=false, in_pitbox=false}
+  o = {}
+  o.d = 0
+  o.drive = { [0] = { 72, 74 }, { 76, 78 }, { 104, 106 }, { 108, 110 } }
+  o.t, o.f, o.stp = 0, 1, 4
+  o.spd = 5
+  opponent = { { lx = 0, ly = 8 }, { cx = 7, cy = 5 }, { nx = 0, ny = 8 }, fuel = 10, lap = 0, name = "mellilot", id = 2, moves = 0, speed = 10, is_pitstop = false, in_pitlane = false, in_pitbox = false }
 end
 
 function calculate_player_speed(time_value, method, arg1, arg2)
   frame_counter += 1
   local frames_needed = base_frames_needed / time_value
   local seconds = time_value
-  if frame_counter >= frames_needed then 
+  if frame_counter >= frames_needed then
     method(arg1, arg2)
     frame_counter = 0
   end
@@ -409,32 +404,32 @@ end
 
 function calculate_opponent_speed(time_value, method, arg1, arg2)
   local seconds = time_value
-    if (opponent_speed >= seconds) then
-      opponent_speed = 0
-      method(arg1, arg2)
-    end
+  if (opponent_speed >= seconds) then
+    opponent_speed = 0
+    method(arg1, arg2)
+  end
   opponent_speed += 1
 end
 
 function move_player()
-  local new_x,new_y=player[2]["cx"],player[2]["cy"]
+  local new_x, new_y = player[2]["cx"], player[2]["cy"]
 
-  if (player["fuel"]!=0) then 
+  if (player["fuel"] != 0) then
     call_method_with_arg(handle_pistop, player)
-  if (player.in_pitbox == false)then
-    calculate_player_speed(player.speed, pathfinding, player, p)
-  end
+    if (player.in_pitbox == false) then
+      calculate_player_speed(player.speed, pathfinding, player, p)
+    end
     calculate_opponent_speed(opponent.speed, pathfinding, opponent, o)
   end
 end
 
 -- tactics
 function calculate_speed(base_speed, engine, pace, compound, tyre_health)
-    return base_speed 
-            * (engine)
-            * (compound)
-            * (pace)
-            * (tyre_health >= 30 and (0.75 + 0.0025 * tyre_health) or (0.615 + 0.007 * tyre_health))
+  return base_speed
+      * engine
+      * compound
+      * pace
+      * (tyre_health >= 30 and (0.75 + 0.0025 * tyre_health) or (0.615 + 0.007 * tyre_health))
 end
 
 function calculate_fuel_burn()
@@ -445,90 +440,90 @@ end
 
 function calculate_tyre_wear(compound)
   tyre_delay = interval(tyre_delay, pace_mode[pace_select]["interval"], "tyre")
-  player.tyre_wear = compound * tyre_distance / 2 
+  player.tyre_wear = compound * tyre_distance / 2
   return ceil(100 - player.tyre_wear)
 end
 
 function interval(delay_arg, modifier, distance)
   local time = modifier * 5
-  if(delay_arg<time)then 
-      delay_arg+=1
+  if (delay_arg < time) then
+    delay_arg += 1
   end
-  if(delay_arg>=time)then
-    delay_arg=0
-    if (distance == "engine") then 
+  if (delay_arg >= time) then
+    delay_arg = 0
+    if (distance == "engine") then
       engine_distance += 1
     end
-    if (distance == "tyre") then 
+    if (distance == "tyre") then
       tyre_distance += 1
-    end 
+    end
   end
   return delay_arg
 end
 
-function change_engine_mode() 
+function change_engine_mode()
   active = true
   local a = 0
   local choice = count_simple_table(engine_mode)
-  if(btnp(➡️))then
+  if btnp(➡️) then
     engine_select += 1
-    if (engine_select > choice) then 
+    if (engine_select > choice) then
       engine_select = 1
     end
-  end 
-    if(btnp(⬅️))then
-      engine_select -= 1
-    if (engine_select <= 0 ) then 
+  end
+  if btnp(⬅️) then
+    engine_select -= 1
+    if (engine_select <= 0) then
       engine_select = choice
     end
-  end 
-  for a=1, choice do
+  end
+  for a = 1, choice do
     engine_mode[a]['selected'] = false
     -- engine_mode[a]['colour'] = 7
   end
-    engine_mode[engine_select]['selected'] = true
-    -- engine_mode[engine_select]['colour'] = 8
+  engine_mode[engine_select]['selected'] = true
+  -- engine_mode[engine_select]['colour'] = 8
 end
 
-function change_pace_mode() 
+function change_pace_mode()
   active = true
   local a = 0
   local count = count_simple_table(pace_mode)
-  if(btnp(⬇️))then
+  if btnp(⬇️) then
     pace_select += 1
-    if (pace_select > count) then 
+    if (pace_select > count) then
       pace_select = 1
     end
-  end 
-  if(btnp(⬆️))then
+  end
+  if btnp(⬆️) then
     pace_select -= 1
-    if (pace_select <= 0 ) then 
+    if (pace_select <= 0) then
       pace_select = count
     end
   end
-  for a=1, count do
+  for a = 1, count do
     pace_mode[a]['selected'] = false
   end
-  pace_mode[pace_select]['selected'] = true 
+  pace_mode[pace_select]['selected'] = true
 end
 
 function count_simple_table(table)
   local i = 0
-  repeat i = i + 1 until 
-    table[i] == nil
+  repeat
+    i = i + 1
+  until table[i] == nil
   return i - 1
 end
 
 -- tactics
-function handle_pistop(car) 
-  local map_sprite=mget(car[2]["cx"],car[2]["cy"])
-  pit_flag=fget(map_sprite)
+function handle_pistop(car)
+  local map_sprite = mget(car[2]["cx"], car[2]["cy"])
+  pit_flag = fget(map_sprite)
 
-  if(pit_flag == 16) then 
+  if (pit_flag == 16) then
+  end
 
-  end 
-  
-  if(pit_flag == 32 and car.is_pitstop == true) then
+  if (pit_flag == 32 and car.is_pitstop == true) then
     fset(23, 0, false)
     fset(15, 0, true)
     car.in_pitlane = true
@@ -536,130 +531,130 @@ function handle_pistop(car)
     pace_select = 2
   end
 
-  if(pit_flag == 128 and car.in_pitlane == true) then
+  if (pit_flag == 128 and car.in_pitlane == true) then
     car.in_pitbox = true
     car.is_pitstop = false
     car.in_pitlane = false
   end
 
-  if (pit_flag == 64) then 
+  if (pit_flag == 64) then
     display = true
     fset(23, 0, true)
     fset(15, 0, false)
   end
 
-  if(btnp(❎)) then 
-    local text="box box box!"
-    textdelay=0
-    display=true
-    set_textwindow(text,8,7,8)
-    car.is_pitstop=true
+  if btnp(❎) then
+    local text = "box box box!"
+    textdelay = 0
+    display = true
+    set_textwindow(text, 8, 7, 8)
+    car.is_pitstop = true
   end
 end
- --
+--
 -->8
 --title screen
 function title_draw()
-  local title="rAT rACE!"
-  local message="press x to start"
-  display_scene(title, message,9,8)
+  local title = "rAT rACE!"
+  local message = "press x to start"
+  display_scene(title, message, 9, 8)
 end
 
 function title_update()
-  if (btnp(❎)) then 
-   scene=1
+  if btnp(❎) then
+    scene = 1
   end
 end
 
 -->8
 --pitstop
- s={{v=0,c=8},{v=0,c=8},{v=0,c=8},{v=0,c=8}}
- k=0
- s_count=1
- s_finished=false
+s = { { v = 0, c = 8 }, { v = 0, c = 8 }, { v = 0, c = 8 }, { v = 0, c = 8 } }
+k = 0
+s_count = 1
+s_finished = false
 
 function pitstop_draw()
   camera_shake()
-  local title="pitstop!"
-  local message="x to refuel!"
-  display_scene(title,message,7,8)
+  local title = "pitstop!"
+  local message = "x to refuel!"
+  display_scene(title, message, 7, 8)
   generate_sequence()
 end
 
 function pitstop_update()
   pit_timer()
-  if (btnp(❎)) then
-    if (s_finished) then
-      sequence_generated=false
-      scene=3
+  if btnp(❎) then
+    if s_finished then
+      sequence_generated = false
+      scene = 3
     end
   end
-  if(sequence_generated) then 
-    if(btnp(⬆️))then
+  if sequence_generated then
+    if btnp(⬆️) then
       check_sequence("⬆️")
     end
-    if(btnp(➡️))then
+    if btnp(➡️) then
       check_sequence("➡️")
     end
-    if(btnp(⬇️))then
+    if btnp(⬇️) then
       check_sequence("⬇️")
     end
-    if(btnp(⬅️))then
+    if btnp(⬅️) then
       check_sequence("⬅️")
     end
-  end   
+  end
 end
 
 function generate_sequence()
-  if(sequence_generated==false) then
-    for i=1,4 do
-      k=flr(rnd(4))
-      if k==0 then
-        k="⬆️"
-      elseif k==1 then
-        k="➡️"
-      elseif k==2 then
-        k="⬇️"
-      elseif k==3 then
-        k="⬅️"
+  if (sequence_generated == false) then
+    for i = 1, 4 do
+      k = flr(rnd(4))
+      if k == 0 then
+        k = "⬆️"
+      elseif k == 1 then
+        k = "➡️"
+      elseif k == 2 then
+        k = "⬇️"
+      elseif k == 3 then
+        k = "⬅️"
       end
-      s[i]["v"]=k
+      s[i]["v"] = k
     end
   end
-  
-  print(s[1]["v"],45,65,s[1]["c"])
-  print(s[2]["v"],55,65,s[2]["c"])
-  print(s[3]["v"],65,65,s[3]["c"])
-  print(s[4]["v"],75,65,s[4]["c"])
-  print("timer: "..timer/30,45,25,s[4]["c"])
-  sequence_generated=true
+
+  print(s[1]["v"], 45, 65, s[1]["c"])
+  print(s[2]["v"], 55, 65, s[2]["c"])
+  print(s[3]["v"], 65, 65, s[3]["c"])
+  print(s[4]["v"], 75, 65, s[4]["c"])
+  print("timer: " .. timer / 30, 45, 25, s[4]["c"])
+  sequence_generated = true
 end
 
 function check_sequence(button)
-  if(s_finished==false) then
-    if (shake<0.1000) then
-      if(s[s_count]["v"]==button) then 
-        s[s_count]["c"]=9
-        s_count+=1
-      if(s_count==5) then
-        s_finished=true
-        s_count=1
-      end
+  if (s_finished == false) then
+    if (shake < 0.1000) then
+      if (s[s_count]["v"] == button) then
+        s[s_count]["c"] = 9
+        s_count += 1
+        if (s_count == 5) then
+          s_finished = true
+          s_count = 1
+        end
       else
-        shake+=1
+        shake += 1
       end
     end
   end
 end
 
 function reset_values()
-  for i=1,4 do 
-    s[i]["c"]=8
+  for i = 1, 4 do
+    s[i]["c"] = 8
   end
-  s_count=1 
-  scene=1
-  s_finished=false
-  timer=0
+  s_count = 1
+  scene = 1
+  s_finished = false
+  timer = 0
   player.is_pitstop = false
   player.in_pitbox = false
   fuel_full = false
@@ -672,37 +667,37 @@ function reset_values()
 end
 
 function pit_timer()
-  if(s_finished==false) then
-    timer+=1
+  if (s_finished == false) then
+    timer += 1
   end
-end 
+end
 
 -->8
 --finish state
 function finish_draw()
   camera()
-  local title="finish!"
-  local message="x to start again!"
-  display_scene(title,message,8,9)
+  local title = "finish!"
+  local message = "x to start again!"
+  display_scene(title, message, 8, 9)
 end
 
 function finish_update()
-  if (btnp(❎)) then 
-    player.lap=0
-    opponent.lap=0
-    player.fuel=25
-    opponent.fuel=25
+  if btnp(❎) then
+    player.lap = 0
+    opponent.lap = 0
+    player.fuel = 25
+    opponent.fuel = 25
     make_entities()
     init_leaderboard()
-    scene=0
+    scene = 0
   end
 end
 
-function init_leaderboard() 
+function init_leaderboard()
   leaderboard = {}
   add(leaderboard, player)
   add(leaderboard, opponent)
-end 
+end
 
 function init_global_values()
   -----
@@ -713,24 +708,24 @@ function init_global_values()
   percent = 0
   fuel_full = false
   -----
-  screenwidth=127
-  screenheight=127
-  scene=0
-  timer=0
-  player_speed=0
-  opponent_speed=0
-  delay=0
-  shake=0
-  flag=0
-  pit_flag=0
-  display=false
-  sequence_generated=false
-  first_move=true
-  textdelay=0
+  screenwidth = 127
+  screenheight = 127
+  scene = 0
+  timer = 0
+  player_speed = 0
+  opponent_speed = 0
+  delay = 0
+  shake = 0
+  flag = 0
+  pit_flag = 0
+  display = false
+  sequence_generated = false
+  first_move = true
+  textdelay = 0
   -- ratics
-  engine_mode = {{"lean", 1, selected=false, colour=8, interval=3}, {"normal", 2, selected=false, colour=8, interval=2}, {"rich", 3, selected=false, colour=8, interval=1}}
-  pace_mode = {{"conserve", 1, selected=false, colour=8, interval=3}, {"normal", 2, selected=false, colour=8, interval=2}, {"push", 3, selected=false, colour=8, interval=1}}
-  tyre_compound = {soft=1.06, medium=1.0, hard=0.97}
+  engine_mode = { { "lean", 1, selected = false, colour = 8, interval = 3 }, { "normal", 2, selected = false, colour = 8, interval = 2 }, { "rich", 3, selected = false, colour = 8, interval = 1 } }
+  pace_mode = { { "conserve", 1, selected = false, colour = 8, interval = 3 }, { "normal", 2, selected = false, colour = 8, interval = 2 }, { "push", 3, selected = false, colour = 8, interval = 1 } }
+  tyre_compound = { soft = 1.06, medium = 1.0, hard = 0.97 }
   engine_select = 2
   pace_select = 2
   choice = 0
@@ -744,6 +739,7 @@ function init_global_values()
   engine_delay = 0
   bg_colour = 1
 end
+
 __gfx__
 00000000000880006777777667777776e888888e677777767700770000007777e888888e0cccccc066d666d600006777000000000000000022222222bbbbbbbb
 00000000008ee8006777777667777776e888888e677777767700770000007777e888888ec000000cdddddddd00006777000000000000000022222222bbbbbbbb
