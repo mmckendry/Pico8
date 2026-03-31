@@ -28,7 +28,7 @@ function init_entities()
 	add(leaderboard, {name='ratson',moves=10})
 	add(leaderboard, {name='pennyroyal',moves=12})
 	add(leaderboard, {name='mellilot',moves=7})
-	add(leaderboard, {name='amaryllis',moves=16})
+	add(leaderboard, {name='cardamine',moves=16})
 end
 
 

@@ -489,13 +489,13 @@ function change_pace_mode()
   active = true
   local a = 0
   local count = count_simple_table(pace_mode)
-  if btnp(⬇️) then
+  if btnp(⬆️) then
     pace_select += 1
     if (pace_select > count) then
       pace_select = 1
     end
   end
-  if btnp(⬆️) then
+  if btnp(⬇️) then
     pace_select -= 1
     if (pace_select <= 0) then
       pace_select = count
