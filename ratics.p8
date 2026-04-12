@@ -23,40 +23,37 @@ function _init()
 end 
 
 function _update()
-x = 0
-y = 0
-
-
+    x = 0
+    y = 0
  
-should_pit = trigger_pitstop()
-change_engine_mode()
-change_pace_mode()
-speed = calculate_speed(base_speed, engine_mode[engine_select][2], pace_mode[pace_select][2], tyre_compound.medium, tyre_wear)
-if (tyre_wear != 0)then 
-    tyre_wear = calculate_tyre_wear(tyre_compound.medium)
-end
-if (fuel != 0)then 
-fuel = calculate_fuel_burn()
-end
+    should_pit = trigger_pitstop()
+    change_engine_mode()
+    change_pace_mode()
+    speed = calculate_speed(base_speed, engine_mode[engine_select][2], pace_mode[pace_select][2], tyre_compound.medium, tyre_wear)
+    if (tyre_wear != 0)then 
+        tyre_wear = calculate_tyre_wear(tyre_compound.medium)
+    end
+    if (fuel != 0)then 
+        fuel = calculate_fuel_burn()
+    end
 end
 
 function _draw()
-cls()
-print("speed: " ..speed, x, y, 1)
-print("fuel: " ..fuel.." lTR", x, y+8, 1)
-print("tyer wear: " ..tyre_wear.."%", x, y+24, 1)
-print("should pit: " ..tostring(should_pit), x, y+32, 1)
-print("engine mode: " ..engine_mode[engine_select][1], x, y+48, bg_colour)
-print("pace mode: " ..pace_mode[pace_select][1], x, y+64, 1)
+    cls()
+    print("speed: " ..speed, x, y, 1)
+    print("fuel: " ..fuel.." lTR", x, y+8, 1)
+    print("tyer wear: " ..tyre_wear.."%", x, y+24, 1)
+    print("should pit: " ..tostring(should_pit), x, y+32, 1)
+    print("engine mode: " ..engine_mode[engine_select][1], x, y+48, bg_colour)
+    print("pace mode: " ..pace_mode[pace_select][1], x, y+64, 1)
 
-print("engine lean selected: " ..tostring(engine_mode[1]['selected']), x, y+72, engine_mode[1]['colour'])
-print("engine normal selected: " ..tostring(engine_mode[2]['selected']), x, y+80,  engine_mode[2]['colour'])
-print("engine rich selected: " ..tostring(engine_mode[3]['selected']), x, y+88,  engine_mode[3]['colour'])
+    print("engine lean selected: " ..tostring(engine_mode[1]['selected']), x, y+72, engine_mode[1]['colour'])
+    print("engine normal selected: " ..tostring(engine_mode[2]['selected']), x, y+80,  engine_mode[2]['colour'])
+    print("engine rich selected: " ..tostring(engine_mode[3]['selected']), x, y+88,  engine_mode[3]['colour'])
 
-print("pace conserve selected: " ..tostring(pace_mode[1]['selected']), x, y+104, pace_mode[1]['colour'])
-print("pace normal selected: " ..tostring(pace_mode[2]['selected']), x, y+112, pace_mode[2]['colour'])
-print("pace push selected: " ..tostring(pace_mode[3]['selected']), x, y+120, pace_mode[3]['colour'])
-
+    print("pace conserve selected: " ..tostring(pace_mode[1]['selected']), x, y+104, pace_mode[1]['colour'])
+    print("pace normal selected: " ..tostring(pace_mode[2]['selected']), x, y+112, pace_mode[2]['colour'])
+    print("pace push selected: " ..tostring(pace_mode[3]['selected']), x, y+120, pace_mode[3]['colour'])
 end
 
 function trigger_pitstop()
@@ -69,7 +66,7 @@ end
 function change_engine_mode() 
     display = true
     local a = 0
-   local count = count_simple_table(engine_mode)
+    local count = count_simple_table(engine_mode)
     if(btnp(➡️))then
         engine_select += 1
         if (engine_select > count) then 
