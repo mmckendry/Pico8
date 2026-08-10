@@ -8,14 +8,14 @@ function _init()
 end
 
 function _update()
-  clearmessage()
+  clear_message()
   if (scene == 0) then
     title_update()
   elseif (scene == 1) then
     change_engine_mode()
     change_pace_mode()
-    speed = calculate_speed(base_speed, engine_mode[engine_select][2], pace_mode[pace_select][2], tyre_compound.medium, player.tyre_wear)
-    player.speed = speed
+    player.speed = calculate_speed(base_speed, engine_mode[engine_select][2], pace_mode[pace_select][2], tyre_compound.medium, player.tyre_wear)
+
 
     if (player.tyre_wear != 0) then
       player.tyre_wear = calculate_tyre_wear(tyre_compound.medium)
@@ -345,7 +345,7 @@ function drawtrack()
   map(0, 0, 0, 0, 128, 128)
 end
 
-function clearmessage()
+function clear_message()
   if (textdelay < 60) then
     textdelay += 1
   end
@@ -379,9 +379,24 @@ function make_entities()
   p.drive = { [0] = { 64, 66 }, { 68, 70 }, { 96, 98 }, { 100, 102 } }
   p.t, p.f, p.stp = 0, 1, 4
   p.spd = 5
+  
+  -- lx, ly - last x, last y coordinate 
+  -- cx, cy - current x, current y coordinate
+  -- nx, ny - next x, next y coordinate
   player = {
-    { lx = 0, ly = 8 }, { cx = 7, cy = 5 }, { nx = 0, ny = 8 }, fuel = 25, lap = 0, name = "ratson", id = 1, moves = 0, speed = 10, is_pitstop = false, in_pitlane = false,
-    in_pitbox = false, tyre_wear = 100
+    { lx = 0, ly = 8 },
+    { cx = 7, cy = 5 },
+    { nx = 0, ny = 8 },
+    fuel = 100,
+    lap = 0,
+    name = "ratson",
+    id = 1,
+    moves = 0,
+    speed = 10,
+    is_pitstop = false,
+    in_pitlane = false,
+    in_pitbox = false,
+    tyre_wear = 100
   }
 
   o = {}
@@ -389,7 +404,23 @@ function make_entities()
   o.drive = { [0] = { 72, 74 }, { 76, 78 }, { 104, 106 }, { 108, 110 } }
   o.t, o.f, o.stp = 0, 1, 4
   o.spd = 5
-  opponent = { { lx = 0, ly = 8 }, { cx = 7, cy = 5 }, { nx = 0, ny = 8 }, fuel = 10, lap = 0, name = "mellilot", id = 2, moves = 0, speed = 10, is_pitstop = false, in_pitlane = false, in_pitbox = false }
+  -- lx, ly - last x, last y coordinate 
+  -- cx, cy - current x, current y coordinate
+  -- nx, ny - next x, next y coordinate
+  opponent = {
+    { lx = 0, ly = 8 },
+    { cx = 7, cy = 5 },
+    { nx = 0, ny = 8 },
+    fuel = 10,
+    lap = 0,
+    name = "mellilot",
+    id = 2,
+    moves = 0,
+    speed = 10,
+    is_pitstop = false,
+    in_pitlane = false,
+    in_pitbox = false 
+  }
 end
 
 function calculate_player_speed(time_value, method, arg1, arg2)
@@ -685,8 +716,6 @@ function finish_update()
   if btnp(❎) then
     player.lap = 0
     opponent.lap = 0
-    player.fuel = 25
-    opponent.fuel = 25
     make_entities()
     init_leaderboard()
     scene = 0
