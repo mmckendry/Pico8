@@ -26,19 +26,31 @@ function _draw()
   end
   if(scene==4) then 
   print("debug--")
-
-  move_car(car1)
+  drawtrack()
+  draw_player()
+  draw_opponent()
+  -- Direction is not set is why they are not animating properly 
+  move_car(car1, p)
   if (i < 250) then
-    move_car(car2)
+    move_car(car2, o)
   end
-  print('car:' ..car1.moves, 32, 60)
-  print('car2:' ..car2.moves, 32, 70)
+  print('car:' ..car1.moves, 32, 60, 8)
+  print('car2:' ..car2.moves, 32, 70, 8)
   i = i+1
   end
 end 
 
 function init_global_values() 
   scene = 4
+  p = {}
+  p.d = 0
+  p.drive = { [0] = { 64, 66 }, { 68, 70 }, { 96, 98 }, { 100, 102 } }
+  p.t, p.f, p.stp = 0, 1, 4
+  p.spd = 5
+  
+  -- lx, ly - last x, last y coordinate 
+  -- cx, cy - current x, current y coordinate
+  -- nx, ny - next x, next y coordinate
   car1 = {
     { lx = 0, ly = 8 },
     { cx = 7, cy = 5 },
@@ -52,13 +64,14 @@ function init_global_values()
     is_pitstop = false,
     in_pitlane = false,
     in_pitbox = false,
-    tyre_wear = 100,
-    d = 0,
-    drive = { [0] = { 64, 66 }, { 68, 70 }, { 96, 98 }, { 100, 102 } },
-    t, f, stp = 0, 1, 4, 
-    spd = 5
+    tyre_wear = 100
   }
 
+  o = {}
+  o.d = 0
+  o.drive = { [0] = { 72, 74 }, { 76, 78 }, { 104, 106 }, { 108, 110 } }
+  o.t, o.f, o.stp = 0, 1, 4
+  o.spd = 5
   -- lx, ly - last x, last y coordinate 
   -- cx, cy - current x, current y coordinate
   -- nx, ny - next x, next y coordinate
@@ -74,11 +87,7 @@ function init_global_values()
     speed = 10,
     is_pitstop = false,
     in_pitlane = false,
-    in_pitbox = false ,
-    d = 0,
-    drive = { [0] = { 72, 74 }, { 76, 78 }, { 104, 106 }, { 108, 110 } },
-    t, f, stp = 0, 1, 4,
-    spd = 5
+    in_pitbox = false 
   }
 end
 
@@ -150,7 +159,7 @@ end
 --   end
 -- end
 
-  function set_neighbours(car) -- dependency, it needs to move out of the pathfinding function 
+  function set_neighbours(car) 
     local up = {}
     local down = {}
     local left = {}
@@ -183,6 +192,28 @@ function can_move(x, y, car)
   end
 end
 
+function drawtrack()
+  map(0, 0, 0, 0, 128, 128)
+end
+
+-- consdense the draw into one for opponent and player
+function draw_player()
+  palt(4, true)
+  palt(0, false)
+  anim_player(p)
+  spr(p.drive[p.d][p.f], car1[2]["cx"] * 8, car1[2]["cy"] * 8, 2, 2)
+end
+
+-- consdense the draw into one for opponent and player
+function draw_opponent()
+  anim_player(o)
+  spr(o.drive[o.d][o.f], car2[2]["cx"] * 8, car2[2]["cy"] * 8, 2, 2)
+end
+
+function anim_player(car)
+  car.t = (car.t + 1) % car.spd
+  if (car.t == 0) car.f = car.f % #car.drive[car.d] + 1
+end
 __gfx__
 00000000000880006777777667777776e888888e677777767700770000007777e888888e0cccccc066d666d600006777000000000000000022222222bbbbbbbb
 00000000008ee8006777777667777776e888888e677777767700770000007777e888888ec000000cdddddddd00006777000000000000000022222222bbbbbbbb
