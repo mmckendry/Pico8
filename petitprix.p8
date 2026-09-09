@@ -27,8 +27,8 @@ function _draw()
   if(scene==4) then 
   print("debug--")
   drawtrack()
-  draw_player()
-  draw_opponent()
+  draw_single_entity(car1, p)
+  draw_single_entity(car2, o)
   -- Direction is not set is why they are not animating properly 
   move_car(car1, p)
   if (i < 250) then
@@ -42,6 +42,8 @@ end
 
 function init_global_values() 
   scene = 4
+
+  -- combine these two objects car1 + p into one complex object so i dont need to pass both (same with Car2 + o)
   p = {}
   p.d = 0
   p.drive = { [0] = { 64, 66 }, { 68, 70 }, { 96, 98 }, { 100, 102 } }
@@ -91,12 +93,11 @@ function init_global_values()
   }
 end
 
-function move_car(car)
-  pathfinding(car)
+function move_car(car, obj)
+  pathfinding(car, obj)
 end
 
---used to take direction as a parameter which was p or o object (the entity of player or opponent secondary object)
-function pathfinding(car)
+function pathfinding(car, obj)
   local next_step = {}
   local candidates = {}
 
@@ -106,9 +107,7 @@ function pathfinding(car)
     car[1]["lx"] -= 1
     car[1]["ly"] = car[2]["cy"]
     first_move = false
-    -- end
   end
-
 
   local neighbours = set_neighbours(car)
 
@@ -135,7 +134,7 @@ function pathfinding(car)
   local lx, ly = car[1]["lx"], car[1]["ly"]
   local cx, cy = car[2]["cx"], car[2]["cy"]
 
-  -- set_direction(lx, ly, cx, cy, direction)
+  set_direction(lx, ly, cx, cy, obj)
   -- sortleaderboard(leaderboard)
 end
 -- direction the car can move in 
@@ -144,20 +143,20 @@ end
 --cx: current x co-ord
 --cy: current y co-ord
 --direction: direction of the sprite  
--- function set_direction(lx, ly, cx, cy, direction)
---   if (lx > cx) then
---     direction.d = 0
---   end
---   if (lx < cx) then
---     direction.d = 1
---   end
---   if (ly > cy) then
---     direction.d = 2
---   end
---   if (ly < cy) then
---     direction.d = 3
---   end
--- end
+function set_direction(lx, ly, cx, cy, direction)
+  if (lx > cx) then
+    direction.d = 0
+  end
+  if (lx < cx) then
+    direction.d = 1
+  end
+  if (ly > cy) then
+    direction.d = 2
+  end
+  if (ly < cy) then
+    direction.d = 3
+  end
+end
 
   function set_neighbours(car) 
     local up = {}
@@ -183,7 +182,6 @@ function can_move(x, y, car)
   flag = fget(map_sprite)
   local computed_value = car.id + flag
 
-  -- printh("Car:  " .. car["name"] .. " Flag: " .. flag .. " Computed Value: " .. computed_value, "petitprix_flag.txt", false, true)
   if (car["name"] == "ratson") then
     return computed_value != 2
   end
@@ -197,17 +195,15 @@ function drawtrack()
 end
 
 -- consdense the draw into one for opponent and player
-function draw_player()
-  palt(4, true)
-  palt(0, false)
-  anim_player(p)
-  spr(p.drive[p.d][p.f], car1[2]["cx"] * 8, car1[2]["cy"] * 8, 2, 2)
+function draw_single_entity(car, obj)
+  exclude_background_colour()
+  anim_player(obj)
+  spr(obj.drive[obj.d][obj.f], car[2]["cx"] * 8, car[2]["cy"] * 8, 2, 2)
 end
 
--- consdense the draw into one for opponent and player
-function draw_opponent()
-  anim_player(o)
-  spr(o.drive[o.d][o.f], car2[2]["cx"] * 8, car2[2]["cy"] * 8, 2, 2)
+function exclude_background_colour()
+  palt(4, true)
+  palt(0, false)
 end
 
 function anim_player(car)
