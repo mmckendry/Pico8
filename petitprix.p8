@@ -3,7 +3,10 @@ version 42
 __lua__
 function _init()
   init_global_values()
- i = 0
+  i = 0
+  player_frame_counter = 0
+  opponent_frame_counter=0
+  base_frames_needed = 30
 end
 
 function _update()
@@ -26,30 +29,23 @@ function _draw()
   end
   if(scene==4) then 
   print("debug--")
+  camera_follow()
+  
   drawtrack()
-  draw_single_entity(car1, p)
-  draw_single_entity(car2, o)
-  -- Direction is not set is why they are not animating properly 
-  move_car(car1, p)
-  if (i < 250) then
-    move_car(car2, o)
-  end
+  
+  draw_single_entity(car1)
+  draw_single_entity(car2)
+  
+  move_car(car1)
+  move_car(car2)
+  
   print('car:' ..car1.moves, 32, 60, 8)
   print('car2:' ..car2.moves, 32, 70, 8)
-  i = i+1
   end
 end 
 
 function init_global_values() 
   scene = 4
-
-  -- combine these two objects car1 + p into one complex object so i dont need to pass both (same with Car2 + o)
-  p = {}
-  p.d = 0
-  p.drive = { [0] = { 64, 66 }, { 68, 70 }, { 96, 98 }, { 100, 102 } }
-  p.t, p.f, p.stp = 0, 1, 4
-  p.spd = 5
-  
   -- lx, ly - last x, last y coordinate 
   -- cx, cy - current x, current y coordinate
   -- nx, ny - next x, next y coordinate
@@ -62,21 +58,21 @@ function init_global_values()
     name = "ratson",
     id = 1,
     moves = 0,
-    speed = 10,
+    speed = 2,
     is_pitstop = false,
     in_pitlane = false,
     in_pitbox = false,
-    tyre_wear = 100
+    tyre_wear = 100,
+
+    --attributes for animation
+    d = 0, --name this (direction the sprite will face)
+    drive = { [0] = { 64, 66 }, { 68, 70 }, { 96, 98 }, { 100, 102 } }, --name this 
+    t = 0, -- name this
+    f = 1, -- name this 
+    stp = 4, -- name this
+    animation_speed = 5
   }
 
-  o = {}
-  o.d = 0
-  o.drive = { [0] = { 72, 74 }, { 76, 78 }, { 104, 106 }, { 108, 110 } }
-  o.t, o.f, o.stp = 0, 1, 4
-  o.spd = 5
-  -- lx, ly - last x, last y coordinate 
-  -- cx, cy - current x, current y coordinate
-  -- nx, ny - next x, next y coordinate
   car2 = {
     { lx = 0, ly = 8 },
     { cx = 7, cy = 5 },
@@ -89,15 +85,47 @@ function init_global_values()
     speed = 10,
     is_pitstop = false,
     in_pitlane = false,
-    in_pitbox = false 
+    in_pitbox = false ,
+
+    --attributes for animation
+    d = 0,
+    drive = { [0] = { 72, 74 }, { 76, 78 }, { 104, 106 }, { 108, 110 } },
+    t = 0,
+    f = 1,
+    stp = 4,
+    animation_speed = 5
   }
 end
 
-function move_car(car, obj)
-  pathfinding(car, obj)
+c = {}
+c.x = 0
+c.y = 0
+--camera follows the player
+function camera_follow()
+  c.x = car1[2]["cx"] - 7
+  c.y = car1[2]["cy"] - 7
+
+  c.x = mid(0, c.x, 128)
+  c.y = mid(0, c.y, 128)
+
+  camera(c.x * 8, c.y * 8)
 end
 
-function pathfinding(car, obj)
+function move_car(car)
+  if(car.name=="ratson") then
+    printh("Car:  " .. car["name"], "debug_log.txt", false, true)
+      calculate_player_speed(pathfinding, car)
+  else
+    printh("Car:  " .. car["name"], "debug_log.txt", false, true)
+      calculate_opponent_speed(pathfinding, car)
+  end
+ 
+
+  -- pathfinding(car, obj)
+end
+
+function pathfinding(car)
+  printh("Pathfinding:  " .. car["name"], "debug_log.txt", false, true)
   local next_step = {}
   local candidates = {}
 
@@ -134,7 +162,7 @@ function pathfinding(car, obj)
   local lx, ly = car[1]["lx"], car[1]["ly"]
   local cx, cy = car[2]["cx"], car[2]["cy"]
 
-  set_direction(lx, ly, cx, cy, obj)
+  set_direction(lx, ly, cx, cy, car)
   -- sortleaderboard(leaderboard)
 end
 -- direction the car can move in 
@@ -143,18 +171,18 @@ end
 --cx: current x co-ord
 --cy: current y co-ord
 --direction: direction of the sprite  
-function set_direction(lx, ly, cx, cy, direction)
+function set_direction(lx, ly, cx, cy, car)
   if (lx > cx) then
-    direction.d = 0
+    car.d = 0
   end
   if (lx < cx) then
-    direction.d = 1
+    car.d = 1
   end
   if (ly > cy) then
-    direction.d = 2
+    car.d = 2
   end
   if (ly < cy) then
-    direction.d = 3
+    car.d = 3
   end
 end
 
@@ -190,15 +218,37 @@ function can_move(x, y, car)
   end
 end
 
+function calculate_player_speed(method, arg)
+  local time_value = arg.speed
+  player_frame_counter += 1
+  local frames_needed = base_frames_needed / time_value
+  local seconds = time_value
+  if player_frame_counter >= frames_needed then
+    method(arg)
+    player_frame_counter = 0
+  end
+end
+
+function calculate_opponent_speed(method, arg)
+  local time_value = arg.speed
+  opponent_frame_counter += 1
+  local frames_needed = base_frames_needed / time_value
+  local seconds = time_value
+  if opponent_frame_counter >= frames_needed then
+    method(arg)
+    opponent_frame_counter = 0
+  end
+end
+
 function drawtrack()
   map(0, 0, 0, 0, 128, 128)
 end
 
 -- consdense the draw into one for opponent and player
-function draw_single_entity(car, obj)
+function draw_single_entity(car)
   exclude_background_colour()
-  anim_player(obj)
-  spr(obj.drive[obj.d][obj.f], car[2]["cx"] * 8, car[2]["cy"] * 8, 2, 2)
+  anim_player(car)
+  spr(car.drive[car.d][car.f], car[2]["cx"] * 8, car[2]["cy"] * 8, 2, 2)
 end
 
 function exclude_background_colour()
@@ -207,7 +257,7 @@ function exclude_background_colour()
 end
 
 function anim_player(car)
-  car.t = (car.t + 1) % car.spd
+  car.t = (car.t + 1) % car.animation_speed
   if (car.t == 0) car.f = car.f % #car.drive[car.d] + 1
 end
 __gfx__
