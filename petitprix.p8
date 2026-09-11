@@ -15,13 +15,6 @@ function _init()
 end
 
 function _update()
-
-end
-
-function _update60()
-end
-
-function _draw()
   cls()
   if(scene==1) then
     title_draw()
@@ -33,22 +26,24 @@ function _draw()
     print("end!")
   end
   if(scene==4) then 
-  print("debug--")
-  clear_textwindow() -- move a lot to update i think logic isnt executing consistent timings 
+    clear_textwindow()
+    move_car(car1)
+    move_car(car2)
+    if btnp(❎) then
+      display = true 
+      set_textwindow("example text", 8, 7, 8)
+    end
+  end
+end
+
+
+function _draw()
+  cls()
   camera_follow()
   drawtrack()
-  
   draw_single_entity(car1)
   draw_single_entity(car2)
-  
-  move_car(car1)
-  move_car(car2)
   display_textwindow()
-  if btnp(❎) then
-    display = true 
-    set_textwindow("example text", 8, 7, 8)
-  end
-  end
 end 
 
 function init_global_values() 
@@ -104,15 +99,17 @@ function init_global_values()
 end
 
 function setup_screen()
-   screenwidth = 127
-   screenheight = 127
+  screenwidth = 127
+  screenheight = 127
 end
 
-c = {}
-c.x = 0
-c.y = 0
+
 --camera follows the player
 function camera_follow()
+  c = {} --camera object
+  c.x = 0
+  c.y = 0
+
   c.x = car1[2]["cx"] - 7
   c.y = car1[2]["cy"] - 7
 
