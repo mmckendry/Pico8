@@ -3,14 +3,19 @@ version 42
 __lua__
 function _init()
   init_global_values()
+  setup_screen()
   i = 0
   player_frame_counter = 0
   opponent_frame_counter=0
   base_frames_needed = 30
+  scene = 4
+  ticker = 0 --intial timer for the text delay
+  textdelay = 120 -- how many ms to wait before clearing the screen
+  display = false -- whether or not to display a message
 end
 
 function _update()
-  -- move_car(car1, p)
+
 end
 
 function _update60()
@@ -19,7 +24,7 @@ end
 function _draw()
   cls()
   if(scene==1) then
-    print("start!")
+    title_draw()
   end
   if(scene==2) then
     print("middle!")
@@ -29,8 +34,8 @@ function _draw()
   end
   if(scene==4) then 
   print("debug--")
+  clear_textwindow() -- move a lot to update i think logic isnt executing consistent timings 
   camera_follow()
-  
   drawtrack()
   
   draw_single_entity(car1)
@@ -38,14 +43,15 @@ function _draw()
   
   move_car(car1)
   move_car(car2)
-  
-  print('car:' ..car1.moves, 32, 60, 8)
-  print('car2:' ..car2.moves, 32, 70, 8)
+  display_textwindow()
+  if btnp(❎) then
+    display = true 
+    set_textwindow("example text", 8, 7, 8)
+  end
   end
 end 
 
 function init_global_values() 
-  scene = 4
   -- lx, ly - last x, last y coordinate 
   -- cx, cy - current x, current y coordinate
   -- nx, ny - next x, next y coordinate
@@ -97,6 +103,11 @@ function init_global_values()
   }
 end
 
+function setup_screen()
+   screenwidth = 127
+   screenheight = 127
+end
+
 c = {}
 c.x = 0
 c.y = 0
@@ -113,10 +124,10 @@ end
 
 function move_car(car)
   if(car.name=="ratson") then
-    printh("Car:  " .. car["name"], "debug_log.txt", false, true)
+    -- printh("Car:  " .. car["name"], "debug_log.txt", false, true)
       calculate_player_speed(pathfinding, car)
   else
-    printh("Car:  " .. car["name"], "debug_log.txt", false, true)
+    -- printh("Car:  " .. car["name"], "debug_log.txt", false, true)
       calculate_opponent_speed(pathfinding, car)
   end
  
@@ -125,7 +136,6 @@ function move_car(car)
 end
 
 function pathfinding(car)
-  printh("Pathfinding:  " .. car["name"], "debug_log.txt", false, true)
   local next_step = {}
   local candidates = {}
 
@@ -186,23 +196,27 @@ function set_direction(lx, ly, cx, cy, car)
   end
 end
 
-  function set_neighbours(car) 
-    local up = {}
-    local down = {}
-    local left = {}
-    local right = {}
+function set_neighbours(car) 
+  local up = {}
+  local down = {}
+  local left = {}
+  local right = {}
+  left[1] = car[3]["nx"] - 1
+  left[2] = car[3]["ny"]
+  right[1] = car[3]["nx"] + 1
+  right[2] = car[3]["ny"]
+  up[1] = car[3]["nx"]
+  up[2] = car[3]["ny"] + 1
+  down[1] = car[3]["nx"]
+  down[2] = car[3]["ny"] - 1
+  return { left, right, up, down }
+end
 
-    left[1] = car[3]["nx"] - 1
-    left[2] = car[3]["ny"]
-    right[1] = car[3]["nx"] + 1
-    right[2] = car[3]["ny"]
-    up[1] = car[3]["nx"]
-    up[2] = car[3]["ny"] + 1
-    down[1] = car[3]["nx"]
-    down[2] = car[3]["ny"] - 1
-    return { left, right, up, down }
-  end
-
+function display_scene(title, message, fg_colour, bg_colour)
+  rectfill(0, 0, screenwidth, screenheight, fg_colour)
+  print(title, hcenter(title), vcenter(screenheight), bg_colour)
+  print(message, hcenter(message), vcenter(screenheight) + (screenheight / 2), bg_colour)
+end
 
 -- whether the car can move forward
 function can_move(x, y, car)
@@ -251,15 +265,63 @@ function draw_single_entity(car)
   spr(car.drive[car.d][car.f], car[2]["cx"] * 8, car[2]["cy"] * 8, 2, 2)
 end
 
+function anim_player(car)
+  car.t = (car.t + 1) % car.animation_speed
+  if (car.t == 0) car.f = car.f % #car.drive[car.d] + 1
+end
+
+function title_draw()
+  local title = "rAT rACE!"
+  local message = "press x to start"
+  display_scene(title, message, 9, 8)
+end
+
+function display_textwindow()
+  local x = c.x * 8
+  local y = c.y * 8
+  if display then
+    rectfill(x + 12, y + 42, x + 122, y + 82, bg_colour)
+    rectfill(x + 10, y + 40, x + 120, y + 80, fg_colour)
+    print(textlabel, hcenter(textlabel) + x, y + 60, text_colour)
+  end
+end
+
+function set_textwindow(text, bg, fg, t_colour, x, y)
+  textlabel = text
+  text_colour = t_colour
+  fg_colour = fg
+  bg_colour = bg
+end
+
+function clear_textwindow()
+  if (ticker < textdelay) then
+    ticker += 1
+  end
+  if (ticker >= textdelay) then
+    ticker = 0
+    display = false
+  end
+end
+
+function display_scene(title, message, fg_colour, bg_colour)
+  rectfill(0, 0, screenwidth, screenheight, fg_colour)
+  print(title, hcenter(title), vcenter(screenheight), bg_colour)
+  print(message, hcenter(message), vcenter(screenheight) + (screenheight / 2), bg_colour)
+end
+
+function hcenter(s)
+  return (screenwidth / 2) - flr((#s * 4) / 2)
+end
+
+function vcenter(s)
+  return (screenheight / 4)
+end
+
 function exclude_background_colour()
   palt(4, true)
   palt(0, false)
 end
 
-function anim_player(car)
-  car.t = (car.t + 1) % car.animation_speed
-  if (car.t == 0) car.f = car.f % #car.drive[car.d] + 1
-end
 __gfx__
 00000000000880006777777667777776e888888e677777767700770000007777e888888e0cccccc066d666d600006777000000000000000022222222bbbbbbbb
 00000000008ee8006777777667777776e888888e677777767700770000007777e888888ec000000cdddddddd00006777000000000000000022222222bbbbbbbb
