@@ -8,7 +8,7 @@ function _init()
   player_frame_counter = 0
   opponent_frame_counter=0
   base_frames_needed = 30
-  scene = 4
+  scene = 1
   ticker = 0 --intial timer for the text delay
   textdelay = 120 -- how many ms to wait before clearing the screen
   display = false -- whether or not to display a message
@@ -17,7 +17,7 @@ end
 function _update()
   cls()
   if(scene==1) then
-    title_draw()
+    update_title()
   end
   if(scene==2) then
     print("middle!")
@@ -29,21 +29,30 @@ function _update()
     clear_textwindow()
     move_car(car1)
     move_car(car2)
-    if btnp(❎) then
-      display = true 
-      set_textwindow("example text", 8, 7, 8)
-    end
+    handle_pitstop(car1)
+    -- handle_button_press()
   end
 end
 
 
 function _draw()
   cls()
-  camera_follow()
-  drawtrack()
-  draw_single_entity(car1)
-  draw_single_entity(car2)
-  display_textwindow()
+  if(scene==1) then
+    draw_title()
+  end
+  if(scene==2) then 
+
+  end
+   if(scene==3) then
+    -- draw_title()
+  end
+  if(scene==4) then
+    camera_follow()
+    drawtrack()
+    draw_single_entity(car1)
+    draw_single_entity(car2)
+    display_textwindow()
+  end
 end 
 
 function init_global_values() 
@@ -60,7 +69,7 @@ function init_global_values()
     id = 1,
     moves = 0,
     speed = 2,
-    is_pitstop = false,
+    is_pitting = false,
     in_pitlane = false,
     in_pitbox = false,
     tyre_wear = 100,
@@ -84,7 +93,7 @@ function init_global_values()
     id = 2,
     moves = 0,
     speed = 10,
-    is_pitstop = false,
+    is_pitting = false,
     in_pitlane = false,
     in_pitbox = false ,
 
@@ -251,6 +260,22 @@ function calculate_opponent_speed(method, arg)
   end
 end
 
+function update_title()
+  if btnp(❎) then
+    scene = 4
+  end
+end
+
+function handle_pitstop(car)
+  if btnp(🅾️) then
+    local text = "box box box!"
+    textdelay = 120
+    display = true
+    set_textwindow(text, 8, 7, 8)
+    car.is_pitting = true
+  end
+end
+
 function drawtrack()
   map(0, 0, 0, 0, 128, 128)
 end
@@ -267,10 +292,10 @@ function anim_player(car)
   if (car.t == 0) car.f = car.f % #car.drive[car.d] + 1
 end
 
-function title_draw()
+function draw_title()
   local title = "rAT rACE!"
   local message = "press x to start"
-  display_scene(title, message, 9, 8)
+  display_scene(title, message, 7, 8)
 end
 
 function display_textwindow()
