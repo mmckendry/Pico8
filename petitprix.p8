@@ -4,7 +4,6 @@ __lua__
 function _init()
   init_global_values()
   setup_screen()
-  i = 0
   player_frame_counter = 0
   opponent_frame_counter=0
   base_frames_needed = 30
@@ -15,7 +14,7 @@ function _init()
 end
 
 function _update()
-  cls()
+  clear_textwindow()
   if(scene==1) then
     update_title()
   end
@@ -26,11 +25,8 @@ function _update()
     print("end!")
   end
   if(scene==4) then 
-    clear_textwindow()
     move_car(car1)
     move_car(car2)
-    handle_pitstop(car1)
-    -- handle_button_press()
   end
 end
 
@@ -131,7 +127,12 @@ end
 function move_car(car)
   if(car.name=="ratson") then
     -- printh("Car:  " .. car["name"], "debug_log.txt", false, true)
-      calculate_player_speed(pathfinding, car)
+    if(car.fuel != 0) then
+      call_method_with_arg(handle_pitstop, car)
+      if (car.in_pitbox == false) then
+        calculate_player_speed(pathfinding, car)
+      end
+    end
   else
     -- printh("Car:  " .. car["name"], "debug_log.txt", false, true)
       calculate_opponent_speed(pathfinding, car)
@@ -267,11 +268,36 @@ function update_title()
 end
 
 function handle_pitstop(car)
-  if btnp(🅾️) then
-    local text = "box box box!"
-    textdelay = 120
+  local map_sprite = mget(car[2]["cx"], car[2]["cy"])
+  pit_flag = fget(map_sprite)
+
+  if (pit_flag == 16) then
+  end
+
+  if (pit_flag == 32 and car.is_pitting == true) then
+    fset(23, 0, false)
+    fset(15, 0, true)
+    car.in_pitlane = true
+    engine_select = 2
+    pace_select = 2
+  end
+
+  if (pit_flag == 128 and car.in_pitlane == true) then
+    car.in_pitbox = true
+    car.is_pitting = false
+    car.in_pitlane = false
+  end
+
+  if (pit_flag == 64) then
     display = true
-    set_textwindow(text, 8, 7, 8)
+    set_textwindow("pit limiter on please!", 8, 7, 8)
+    fset(23, 0, true)
+    fset(15, 0, false)
+  end
+
+  if btnp(❎) then
+    display = true
+    set_textwindow("box box box!", 8, 7, 8)
     car.is_pitting = true
   end
 end
@@ -316,6 +342,7 @@ function set_textwindow(text, bg, fg, t_colour, x, y)
 end
 
 function clear_textwindow()
+  printh("Ticker:  " ..ticker, "debug_log.txt", false, true)
   if (ticker < textdelay) then
     ticker += 1
   end
@@ -337,6 +364,10 @@ end
 
 function vcenter(s)
   return (screenheight / 4)
+end
+
+function call_method_with_arg(method, arg)
+  method(arg)
 end
 
 function exclude_background_colour()
