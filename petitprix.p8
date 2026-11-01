@@ -3,6 +3,7 @@ version 42
 __lua__
 function _init()
   init_global_values()
+  init_leaderboard()
   setup_screen()
   player_frame_counter = 0
   opponent_frame_counter=0
@@ -11,6 +12,16 @@ function _init()
   ticker = 0 --intial timer for the text delay
   textdelay = 120 -- how many ms to wait before clearing the screen
   display = false -- whether or not to display a message
+  test_flag = false
+  percent = 0
+
+  timer=0
+  sequence_object = { { v = 0, c = 8 }, { v = 0, c = 8 }, { v = 0, c = 8 }, { v = 0, c = 8 } }
+  sequence_generated = false
+  s_count = 1
+  s_finished = false
+  k = 0 -- rename this its for generating the sequence
+  shake=0
 end
 
 function _update()
@@ -19,7 +30,7 @@ function _update()
     update_title()
   end
   if(scene==2) then
-    print("middle!")
+    pitstop_update()
   end
   if(scene==3) then
     print("end!")
@@ -37,10 +48,11 @@ function _draw()
     draw_title()
   end
   if(scene==2) then 
-
+    -- refuel_draw(car1)
+    -- pitstop_draw()
   end
    if(scene==3) then
-    -- draw_title()
+    refuel_draw(car1)
   end
   if(scene==4) then
     camera_follow()
@@ -48,6 +60,11 @@ function _draw()
     draw_single_entity(car1)
     draw_single_entity(car2)
     display_textwindow()
+    display_metrics()
+      
+    if car1.in_pitbox then
+      pitstop_draw()
+    end
   end
 end 
 
@@ -180,7 +197,28 @@ function pathfinding(car)
   local cx, cy = car[2]["cx"], car[2]["cy"]
 
   set_direction(lx, ly, cx, cy, car)
-  -- sortleaderboard(leaderboard)
+  sortleaderboard(leaderboard)
+end
+
+function init_leaderboard()
+  leaderboard = {}
+  add(leaderboard, car1)
+  add(leaderboard, car2)
+end
+
+function sortleaderboard(leaderboard)
+  local itemcount = count(leaderboard)
+  local haschanged
+  repeat
+    haschanged = false
+    itemcount = itemcount - 1
+    for i = 1, itemcount do
+      if (leaderboard[i]['moves'] < leaderboard[i + 1]['moves']) then
+        leaderboard[i], leaderboard[i + 1] = leaderboard[i + 1], leaderboard[i]
+        haschanged = true
+      end
+    end
+  until haschanged == false
 end
 -- direction the car can move in 
 --lx: last x co-ord
@@ -264,6 +302,7 @@ end
 function update_title()
   if btnp(❎) then
     scene = 4
+    test_flag = false
   end
 end
 
@@ -272,6 +311,7 @@ function handle_pitstop(car)
   pit_flag = fget(map_sprite)
 
   if (pit_flag == 16) then
+    set_textwindow("in the box!", 8, 7, 8)
   end
 
   if (pit_flag == 32 and car.is_pitting == true) then
@@ -286,6 +326,7 @@ function handle_pitstop(car)
     car.in_pitbox = true
     car.is_pitting = false
     car.in_pitlane = false
+    -- scene = 2
   end
 
   if (pit_flag == 64) then
@@ -295,7 +336,7 @@ function handle_pitstop(car)
     fset(15, 0, false)
   end
 
-  if btnp(❎) then
+  if btnp(🅾️) then
     display = true
     set_textwindow("box box box!", 8, 7, 8)
     car.is_pitting = true
@@ -324,6 +365,166 @@ function draw_title()
   display_scene(title, message, 7, 8)
 end
 
+function pitstop_draw()
+  camera_shake()
+  local title = "pitstop!"
+  local message = "x when tyres are changed!"
+  display_scene(title, message, 7, 8)
+  generate_sequence()
+end
+
+function refuel_draw(car)
+  local title = "refuel"
+  local message = "pump the fuel!"
+  display_scene(title, message, 7, 8)
+  handle_fuel_trigger(car)
+  print("fuel: " .. car.fuel .. " ltrs", 10, 10, 8)
+  print("percentage: " .. percent, 10, 20, 8)
+  if fuel_full then
+    print("x to release!", 10, 120, 8)
+    if btnp(❎) then
+      reset_values(car)
+      scene = 4
+    end
+  end
+end
+
+function topup_fuel(car)
+  percent = get_percentage_of_total(2, car.fuel)
+  if (car.fuel < 100) then
+    engine_distance = engine_distance - percent
+    car.fuel = car.fuel + percent
+  end
+  if (car.fuel >= 100) then
+    car.fuel = 100
+    fuel_full = true
+  end
+end
+
+function handle_fuel_trigger(car)
+  local up_buttton_colour = 8
+  local down_button_colour = 8
+
+  if refuel_trigger then
+    up_buttton_colour = 9
+    if btnp(⬆️) then
+      topup_fuel(car)
+      refuel_trigger = refuel_toggle()
+    end
+  elseif not refuel_trigger then
+    down_button_colour = 9
+    if btnp(⬇️) then
+      topup_fuel(car)
+      refuel_trigger = refuel_toggle()
+    end
+  end
+
+  print("⬆️", 60, 60, up_buttton_colour)
+  print("⬇️", 60, 70, down_button_colour)
+end
+
+function refuel_toggle()
+  return not refuel_trigger
+end
+
+function reset_values(car)
+  for i = 1, 4 do
+    sequence_object[i]["c"] = 8
+  end
+  s_count = 1
+  scene = 1
+  s_finished = false
+  timer = 0
+  car.is_pitstop = false
+  car.in_pitbox = false
+  fuel_full = false
+  fuel = 100
+  engine_distance = 0
+  car.tyre_wear = 100
+  tyre_distance = 0
+  engine_select = 2
+  pace_select = 2
+end
+
+function pit_timer()
+  if (s_finished == false) then
+    timer += 1
+  end
+end
+
+function pitstop_update()
+  pit_timer()
+  if btnp(❎) then
+    if s_finished then
+      sequence_generated = false
+      scene = 3
+    end
+  end
+  if sequence_generated then
+    if btnp(⬆️) then
+      check_sequence("⬆️")
+    end
+    if btnp(➡️) then
+      check_sequence("➡️")
+    end
+    if btnp(⬇️) then
+      check_sequence("⬇️")
+    end
+    if btnp(⬅️) then
+      check_sequence("⬅️")
+    end
+  end
+end
+
+function generate_sequence()
+    printh("Sequence generated:  " ..tostring(sequence_generated), "debug_log.txt", false, true)
+  if (sequence_generated == false) then
+    for i = 1, 4 do
+      k = flr(rnd(4))
+      if k == 0 then
+        k = "⬆️"
+      elseif k == 1 then
+        k = "➡️"
+      elseif k == 2 then
+        k = "⬇️"
+      elseif k == 3 then
+        k = "⬅️"
+      end
+      printh("inside Sequence generated:  " ..i .." and " ..k, "debug_log.txt", false, true)
+      sequence_object[i]["v"] = k
+    end
+  end
+  print(sequence_object[1]["v"], 45, 65, sequence_object[1]["c"])
+  print(sequence_object[2]["v"], 55, 65, sequence_object[2]["c"])
+  print(sequence_object[3]["v"], 65, 65, sequence_object[3]["c"])
+  print(sequence_object[4]["v"], 75, 65, sequence_object[4]["c"])
+  print("timer: " .. timer / 30, 45, 25, sequence_object[4]["c"])
+  sequence_generated = true
+end
+
+function check_sequence(button)
+  if (s_finished == false) then
+    if (shake < 0.1000) then
+      if (sequence_object[s_count]["v"] == button) then
+        sequence_object[s_count]["c"] = 9
+        s_count += 1
+        if (s_count == 5) then
+          s_finished = true
+          s_count = 1
+        end
+      else
+        shake += 1
+      end
+    end
+  end
+end
+
+function get_percentage_of_total(percentage, total)
+  local p
+  p = percentage / 100
+  return p * total
+end
+
 function display_textwindow()
   local x = c.x * 8
   local y = c.y * 8
@@ -342,7 +543,7 @@ function set_textwindow(text, bg, fg, t_colour, x, y)
 end
 
 function clear_textwindow()
-  printh("Ticker:  " ..ticker, "debug_log.txt", false, true)
+  -- printh("Ticker:  " ..ticker, "debug_log.txt", false, true)
   if (ticker < textdelay) then
     ticker += 1
   end
@@ -356,6 +557,24 @@ function display_scene(title, message, fg_colour, bg_colour)
   rectfill(0, 0, screenwidth, screenheight, fg_colour)
   print(title, hcenter(title), vcenter(screenheight), bg_colour)
   print(message, hcenter(message), vcenter(screenheight) + (screenheight / 2), bg_colour)
+end
+
+function display_metrics()
+  local x = c.x * 8
+  local y = c.y * 8
+  rectfill(x + 1, y + 41, x + 39, y + 1, 8)
+  rectfill(x, y + 40, x + 38, y + 0, 9)
+  display_leaderboard(x, y)
+  -- display_taskbar(x, y)
+end
+
+function display_leaderboard(x, y)
+  print('position', x + 1, y + 4, 8)
+  print('--------', x + 1, y + 8, 8)
+  for k, v in ipairs(leaderboard) do
+    print(v['name'])
+    print(v['moves'])
+  end
 end
 
 function hcenter(s)
@@ -373,6 +592,20 @@ end
 function exclude_background_colour()
   palt(4, true)
   palt(0, false)
+end
+
+function camera_shake()
+  local shakex = 16 - rnd(32)
+  local shakey = 16 - rnd(32)
+  shakex *= shake
+  shakey *= shake
+
+  camera(shakex, shakey)
+  shake = shake * 0.95
+
+  if (shake < 0.05) then
+    shake = 0
+  end
 end
 
 __gfx__
