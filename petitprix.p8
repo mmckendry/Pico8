@@ -5,6 +5,7 @@ function _init()
   init_global_values()
   init_leaderboard()
   setup_screen()
+  setup_colours()
   player_frame_counter = 0
   opponent_frame_counter=0
   base_frames_needed = 30
@@ -22,6 +23,14 @@ function _init()
   s_finished = false
   k = 0 -- rename this its for generating the sequence
   shake=0
+
+  -- ratics
+  engine_mode = { { label = "lean", speed_value = 1, selected = false, colour = maroon, interval = 3 }, { label = "normal", speed_value = 2, selected = false, colour = maroon, interval = 2 }, { label = "rich", speed_value = 3, selected = false, colour = maroon, interval = 1 } }
+  pace_mode = { { label = "conserve", speed_value = 1, selected = false, colour = dark_green, interval = 3 }, { label = "normal", speed_value = 2, selected = false, colour = dark_green, interval = 2 }, { label = "push", speed_value = 3, selected = false, colour = dark_green, interval = 1 } }
+  tyre_compound = { soft = 1.06, medium = 1.0, hard = 0.97 }
+  engine_select = 2
+  pace_select = 2
+  base_speed = 0.8
 end
 
 function _update()
@@ -38,6 +47,10 @@ function _update()
   if(scene==4) then 
     move_car(car1)
     move_car(car2)
+
+    if car1.in_pitbox then
+      pitstop_update()
+    end
   end
 end
 
@@ -55,6 +68,10 @@ function _draw()
     refuel_draw(car1)
   end
   if(scene==4) then
+    change_pace_mode()
+    change_engine_mode()
+    car1.speed = calculate_speed(base_speed, engine_mode[engine_select]['speed_value'], pace_mode[pace_select]['speed_value'], tyre_compound.medium, car1.tyre_wear)
+
     camera_follow()
     drawtrack()
     draw_single_entity(car1)
@@ -81,7 +98,7 @@ function init_global_values()
     name = "ratson",
     id = 1,
     moves = 0,
-    speed = 2,
+    speed = 9,
     is_pitting = false,
     in_pitlane = false,
     in_pitbox = false,
@@ -125,6 +142,24 @@ function setup_screen()
   screenheight = 127
 end
 
+function setup_colours()
+  black = 0
+  navy = 1
+  maroon = 2
+  dark_green = 3 
+  brown = 4
+  dark_grey = 5
+  light_grey = 6
+  white = 7 
+  red = 8 
+  orange = 9
+  yellow = 10
+  light_green = 11
+  blue = 12
+  slate = 13
+  pink = 14
+  tan = 15
+end
 
 --camera follows the player
 function camera_follow()
@@ -147,12 +182,12 @@ function move_car(car)
     if(car.fuel != 0) then
       call_method_with_arg(handle_pitstop, car)
       if (car.in_pitbox == false) then
-        calculate_player_speed(pathfinding, car)
+        move_player_based_on_speed(pathfinding, car)
       end
     end
   else
     -- printh("Car:  " .. car["name"], "debug_log.txt", false, true)
-      calculate_opponent_speed(pathfinding, car)
+      move_opponent_based_on_speed(pathfinding, car)
   end
  
 
@@ -277,7 +312,7 @@ function can_move(x, y, car)
   end
 end
 
-function calculate_player_speed(method, arg)
+function move_player_based_on_speed(method, arg)
   local time_value = arg.speed
   player_frame_counter += 1
   local frames_needed = base_frames_needed / time_value
@@ -288,7 +323,7 @@ function calculate_player_speed(method, arg)
   end
 end
 
-function calculate_opponent_speed(method, arg)
+function move_opponent_based_on_speed(method, arg)
   local time_value = arg.speed
   opponent_frame_counter += 1
   local frames_needed = base_frames_needed / time_value
@@ -299,10 +334,75 @@ function calculate_opponent_speed(method, arg)
   end
 end
 
+function calculate_speed(base_speed, engine, pace, compound, tyre_health)
+  return base_speed
+      * engine
+      * compound
+      * pace
+      * (tyre_health >= 30 and (0.75 + 0.0025 * tyre_health) or (0.615 + 0.007 * tyre_health))
+end
+
+function change_pace_mode()
+  active = true
+  local a = 0
+  local count = count_simple_table(pace_mode)
+  if btnp(⬆️) then
+    pace_select += 1
+    if (pace_select > count) then
+      pace_select = 1
+    end
+  end
+  if btnp(⬇️) then
+    pace_select -= 1
+    if (pace_select <= 0) then
+      pace_select = count
+    end
+  end
+  for a = 1, count do
+    pace_mode[a]['selected'] = false
+    pace_mode[a]['colour'] = maroon
+  end
+  pace_mode[pace_select]['selected'] = true
+  pace_mode[pace_select]['colour'] = orange
+end
+
+function change_engine_mode()
+  active = true
+  local a = 0
+  local choice = count_simple_table(engine_mode)
+  if btnp(➡️) then
+    engine_select += 1
+    if (engine_select > choice) then
+      engine_select = 1
+    end
+  end
+  if btnp(⬅️) then
+    engine_select -= 1
+    if (engine_select <= 0) then
+      engine_select = choice
+    end
+  end
+  for a = 1, choice do
+    engine_mode[a]['selected'] = false
+    engine_mode[a]['colour'] = maroon
+  end
+  engine_mode[engine_select]['selected'] = true
+  engine_mode[engine_select]['colour'] = orange
+end
+
+function count_simple_table(table)
+  local i = 0
+  repeat
+    i = i + 1
+  until table[i] == nil
+  return i - 1
+end
+
+
 function update_title()
   if btnp(❎) then
     scene = 4
-    test_flag = false
+    test_flag = flase
   end
 end
 
@@ -362,14 +462,14 @@ end
 function draw_title()
   local title = "rAT rACE!"
   local message = "press x to start"
-  display_scene(title, message, 7, 8)
+  display_scene(title, message, white, red)
 end
 
 function pitstop_draw()
   camera_shake()
   local title = "pitstop!"
   local message = "x when tyres are changed!"
-  display_scene(title, message, 7, 8)
+  display_scene(title, message, white, red)
   generate_sequence()
 end
 
@@ -477,7 +577,7 @@ function pitstop_update()
 end
 
 function generate_sequence()
-    printh("Sequence generated:  " ..tostring(sequence_generated), "debug_log.txt", false, true)
+    -- printh("Sequence generated:  " ..tostring(sequence_generated), "debug_log.txt", false, true)
   if (sequence_generated == false) then
     for i = 1, 4 do
       k = flr(rnd(4))
@@ -490,7 +590,7 @@ function generate_sequence()
       elseif k == 3 then
         k = "⬅️"
       end
-      printh("inside Sequence generated:  " ..i .." and " ..k, "debug_log.txt", false, true)
+      -- printh("inside Sequence generated:  " ..i .." and " ..k, "debug_log.txt", false, true)
       sequence_object[i]["v"] = k
     end
   end
@@ -517,12 +617,6 @@ function check_sequence(button)
       end
     end
   end
-end
-
-function get_percentage_of_total(percentage, total)
-  local p
-  p = percentage / 100
-  return p * total
 end
 
 function display_textwindow()
@@ -563,14 +657,38 @@ function display_metrics()
   local x = c.x * 8
   local y = c.y * 8
   rectfill(x + 1, y + 41, x + 39, y + 1, 8)
-  rectfill(x, y + 40, x + 38, y + 0, 9)
+  rectfill(x, y + 40, x + 38, y + 0, 7)
   display_leaderboard(x, y)
-  -- display_taskbar(x, y)
+  display_taskbar(x, y)
+end
+
+function display_taskbar()
+  local x = c.x * 8
+  local y = c.y * 8
+  rectfill(x, y + 108, x + 128, y + 128, 8)
+  rectfill(x, y + 106, x + 126, y + 126, 7)
+  print("engine: ", x + 2, y + 107, 8)
+  print("➡️", x + 30, y + 107, engine_mode[1]['colour'])
+  print("➡️", x + 38, y + 107, engine_mode[2]['colour'])
+  print("➡️", x + 46, y + 107, engine_mode[3]['colour'])
+  
+  print("pace: ", x + 2, y + 115, red)
+  print("➡️", x + 30, y + 115, pace_mode[1]['colour'])
+  print("➡️", x + 38, y + 115, pace_mode[2]['colour'])
+  print("➡️", x + 46, y + 115, pace_mode[3]['colour'])
+
+  
+  print("tyre wear: ", x + 60, y + 107, red)
+  print(get_percentage(car1.tyre_wear, 100) .. "%", x + 100, y + 107, blue)
+  
+  print("fuel: ", x + 60, y + 114, 8)
+  print(car1.fuel .. "ltrs", x + 100, y + 114, blue)
+  -- display_fuel()
 end
 
 function display_leaderboard(x, y)
-  print('position', x + 1, y + 4, 8)
-  print('--------', x + 1, y + 8, 8)
+  print('position', x + 1, y + 4, red)
+  print('--------', x + 1, y + 8, red)
   for k, v in ipairs(leaderboard) do
     print(v['name'])
     print(v['moves'])
@@ -583,6 +701,11 @@ end
 
 function vcenter(s)
   return (screenheight / 4)
+end
+
+function get_percentage(value, max_value)
+	local percentage = (value / max_value) * 100
+	return percentage 
 end
 
 function call_method_with_arg(method, arg)
