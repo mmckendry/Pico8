@@ -31,6 +31,12 @@ function _init()
   engine_select = 2
   pace_select = 2
   base_speed = 0.8
+  
+  tyre_delay = 0 -- used as the delay value in the interval when calculating how fast tyres wear
+  engine_delay = 0 -- used as the delay value in the interval when calculating how fast fuel burns
+
+  tyre_distance = 0 --  used in the calculation of tyre wear -- like an internal ticker
+  engine_distance = 0 -- used in the calculation of fuel burn  -- like an internal ticker
 end
 
 function _update()
@@ -45,6 +51,9 @@ function _update()
     print("end!")
   end
   if(scene==4) then 
+
+    car1.fuel = calculate_fuel_burn()
+
     move_car(car1)
     move_car(car2)
 
@@ -93,7 +102,7 @@ function init_global_values()
     { lx = 0, ly = 8 },
     { cx = 7, cy = 5 },
     { nx = 0, ny = 8 },
-    fuel = 100,
+    fuel = 100, 
     lap = 0,
     name = "ratson",
     id = 1,
@@ -342,6 +351,35 @@ function calculate_speed(base_speed, engine, pace, compound, tyre_health)
       * (tyre_health >= 30 and (0.75 + 0.0025 * tyre_health) or (0.615 + 0.007 * tyre_health))
 end
 
+function calculate_fuel_burn()
+  engine_delay = interval(engine_delay, engine_mode[engine_select]["interval"], "engine")
+  local fuel_burn = engine_distance / 4
+ return ceil(1006 - fuel_burn)
+end
+
+function calculate_tyre_wear(compound)
+  tyre_delay = interval(tyre_delay, pace_mode[pace_select]["interval"], "tyre")
+  player.tyre_wear = compound * tyre_distance / 2
+  return ceil(100 - player.tyre_wear)
+end
+
+function interval(delay_arg, modifier, distance)
+  local time = modifier * 5
+  if (delay_arg < time) then
+    delay_arg += 1
+  end
+  if (delay_arg >= time) then
+    delay_arg = 0
+    if (distance == "engine") then
+      engine_distance += 1
+    end
+    if (distance == "tyre") then
+      tyre_distance += 1
+    end
+  end
+  return delay_arg
+end
+
 function change_pace_mode()
   active = true
   local a = 0
@@ -489,8 +527,8 @@ function refuel_draw(car)
   end
 end
 
-function topup_fuel(car)
-  percent = get_percentage_of_total(2, car.fuel)
+function topup_fuel(car) -- all of this needs adding fuel method to be rewritten, going for 1800 ltrs vs 100 units
+  percent = get_percentage(2, car.fuel)
   if (car.fuel < 100) then
     engine_distance = engine_distance - percent
     car.fuel = car.fuel + percent
