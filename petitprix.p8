@@ -37,6 +37,7 @@ function _init()
 
   tyre_distance = 0 --  used in the calculation of tyre wear -- like an internal ticker
   engine_distance = 0 -- used in the calculation of fuel burn  -- like an internal ticker
+  max_fuel_load = 150
 end
 
 function _update()
@@ -354,7 +355,7 @@ end
 function calculate_fuel_burn(car)
   engine_delay = interval(engine_delay, engine_mode[engine_select]["interval"], "engine")
   local fuel_burn = engine_distance / 4
-  car.fuel = ceil(1006 - fuel_burn)
+  car.fuel = ceil(100 - fuel_burn)
 end
 
 function calculate_tyre_wear(car, compound)
@@ -528,29 +529,29 @@ function refuel_draw(car)
 end
 
 function topup_fuel(car) -- all of this needs adding fuel method to be rewritten, going for 1800 ltrs vs 100 units
-  percent = get_percentage(2, car.fuel)
-  if (car.fuel < 100) then
-    engine_distance = engine_distance - percent
-    car.fuel = car.fuel + percent
+  percent = get_percentage(car.fuel, max_fuel_load)
+  if (percent < 100) then
+    car.fuel = car.fuel + 5
   end
-  if (car.fuel >= 100) then
-    car.fuel = 100
-    fuel_full = true
+  if (percent >= 100) then
+    percent = 100
+    car.fuel = max_fuel_load
   end
+  fuel_full = true -- rename, to something like release_allowed
 end
 
 function handle_fuel_trigger(car)
-  local up_buttton_colour = 8
-  local down_button_colour = 8
+  local up_buttton_colour = red
+  local down_button_colour = red
 
   if refuel_trigger then
-    up_buttton_colour = 9
+    up_buttton_colour = orange
     if btnp(⬆️) then
       topup_fuel(car)
       refuel_trigger = refuel_toggle()
     end
   elseif not refuel_trigger then
-    down_button_colour = 9
+    down_button_colour = orange
     if btnp(⬇️) then
       topup_fuel(car)
       refuel_trigger = refuel_toggle()
