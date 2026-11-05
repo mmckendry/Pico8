@@ -52,7 +52,8 @@ function _update()
   end
   if(scene==4) then 
 
-    car1.fuel = calculate_fuel_burn()
+    calculate_fuel_burn(car1)
+    calculate_tyre_wear(car1, tyre_compound.medium)
 
     move_car(car1)
     move_car(car2)
@@ -62,7 +63,6 @@ function _update()
     end
   end
 end
-
 
 function _draw()
   cls()
@@ -351,16 +351,16 @@ function calculate_speed(base_speed, engine, pace, compound, tyre_health)
       * (tyre_health >= 30 and (0.75 + 0.0025 * tyre_health) or (0.615 + 0.007 * tyre_health))
 end
 
-function calculate_fuel_burn()
+function calculate_fuel_burn(car)
   engine_delay = interval(engine_delay, engine_mode[engine_select]["interval"], "engine")
   local fuel_burn = engine_distance / 4
- return ceil(1006 - fuel_burn)
+  car.fuel = ceil(1006 - fuel_burn)
 end
 
-function calculate_tyre_wear(compound)
+function calculate_tyre_wear(car, compound)
   tyre_delay = interval(tyre_delay, pace_mode[pace_select]["interval"], "tyre")
-  player.tyre_wear = compound * tyre_distance / 2
-  return ceil(100 - player.tyre_wear)
+  local tyre_wear = compound * tyre_distance / 2
+  car.tyre_wear  = ceil(100 - tyre_wear)
 end
 
 function interval(delay_arg, modifier, distance)
