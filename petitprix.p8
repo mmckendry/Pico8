@@ -359,9 +359,11 @@ function calculate_fuel_burn(car)
 end
 
 function calculate_tyre_wear(car, compound)
-  tyre_delay = interval(tyre_delay, pace_mode[pace_select]["interval"], "tyre")
-  local tyre_wear = compound * tyre_distance / 2
-  car.tyre_wear  = ceil(100 - tyre_wear)
+  if (car.tyre_wear > 0) then
+    tyre_delay = interval(tyre_delay, pace_mode[pace_select]["interval"], "tyre")
+    local tyre_wear = compound * tyre_distance / 2
+    car.tyre_wear  = ceil(100 - tyre_wear)
+  end
 end
 
 function interval(delay_arg, modifier, distance)
@@ -437,7 +439,6 @@ function count_simple_table(table)
   return i - 1
 end
 
-
 function update_title()
   if btnp(❎) then
     scene = 4
@@ -450,7 +451,7 @@ function handle_pitstop(car)
   pit_flag = fget(map_sprite)
 
   if (pit_flag == 16) then
-    set_textwindow("in the box!", 8, 7, 8)
+    set_textwindow("in the box!", red, white, red)
   end
 
   if (pit_flag == 32 and car.is_pitting == true) then
@@ -470,14 +471,14 @@ function handle_pitstop(car)
 
   if (pit_flag == 64) then
     display = true
-    set_textwindow("pit limiter on please!", 8, 7, 8)
+    set_textwindow("pit limiter on please!", red, white, red)
     fset(23, 0, true)
     fset(15, 0, false)
   end
 
   if btnp(🅾️) then
     display = true
-    set_textwindow("box box box!", 8, 7, 8)
+    set_textwindow("box box box!", red, white, red)
     car.is_pitting = true
   end
 end
@@ -515,12 +516,12 @@ end
 function refuel_draw(car)
   local title = "refuel"
   local message = "pump the fuel!"
-  display_scene(title, message, 7, 8)
+  display_scene(title, message, white, red)
   handle_fuel_trigger(car)
-  print("fuel: " .. car.fuel .. " ltrs", 10, 10, 8)
-  print("percentage: " .. percent, 10, 20, 8)
+  print("fuel: " .. car.fuel .. " ltrs", 10, 10, red)
+  print("percentage: " .. percent, 10, 20, red)
   if fuel_full then
-    print("x to release!", 10, 120, 8)
+    print("x to release!", 10, 120, red)
     if btnp(❎) then
       reset_values(car)
       scene = 4
@@ -704,9 +705,9 @@ end
 function display_taskbar()
   local x = c.x * 8
   local y = c.y * 8
-  rectfill(x, y + 108, x + 128, y + 128, 8)
-  rectfill(x, y + 106, x + 126, y + 126, 7)
-  print("engine: ", x + 2, y + 107, 8)
+  rectfill(x, y + 108, x + 128, y + 128, red)
+  rectfill(x, y + 106, x + 126, y + 126, white)
+  print("engine: ", x + 2, y + 107, red)
   print("➡️", x + 30, y + 107, engine_mode[1]['colour'])
   print("➡️", x + 38, y + 107, engine_mode[2]['colour'])
   print("➡️", x + 46, y + 107, engine_mode[3]['colour'])
@@ -718,7 +719,7 @@ function display_taskbar()
 
   
   print("tyre wear: ", x + 60, y + 107, red)
-  print(get_percentage(car1.tyre_wear, 100) .. "%", x + 100, y + 107, blue)
+  print(car1.tyre_wear .. "%", x + 100, y + 107, blue)
   
   print("fuel: ", x + 60, y + 114, 8)
   print(car1.fuel .. "ltrs", x + 100, y + 114, blue)
